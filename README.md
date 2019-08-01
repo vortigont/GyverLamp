@@ -5,8 +5,9 @@
 * [Схемы подключения](#chapter-2)
 * [Материалы и компоненты](#chapter-3)
 * [Как скачать и прошить](#chapter-4)
-* [FAQ](#chapter-5)
-* [Полезная информация](#chapter-6)
+* [Настройка интеграции с HomeAssistant](#chapter-5)
+* [FAQ](#chapter-6)
+* [Полезная информация](#chapter-7)
 [![AlexGyver YouTube](http://alexgyver.ru/git_banner.jpg)](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
 
 <a id="chapter-0"></a>
@@ -168,6 +169,8 @@ input_number:
 3dc22b - заменить на ID чипа ESP,  он будет виден в названии лампы и в entity_id в конце строки после знака _
 Настройка mqtt появится в wi-fi менеджере при первом запуске. В первый раз надо прошить, полностью стерев ESP
 
+<a id="chapter-6"></a>
+
 ## FAQ
 ### Основные вопросы
 В: Как скачать с этого грёбаного сайта?  
@@ -187,7 +190,7 @@ input_number:
 
 ### Вопросы по этому проекту
 
-<a id="chapter-6"></a>
+<a id="chapter-7"></a>
 ## Полезная информация
 * [Мой сайт](http://alexgyver.ru/)
 * [Основной YouTube канал](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
