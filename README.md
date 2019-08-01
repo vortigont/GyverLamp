@@ -119,6 +119,55 @@
     AP_PORT 8888
 	
 <a id="chapter-5"></a>
+
+## Добавление ползунков Scale Speed в Home Assistant
+
+# в configuration.yaml
+```
+input_number:
+  speed:
+    name: Speed
+    initial: 30
+    min: 0
+    max: 255
+    step: 1
+
+  scale:
+    name: Scale
+    initial: 30
+    min: 0
+    max: 255
+    step: 1
+```
+# в automations.yaml
+```
+- alias: Gyver Speed
+  trigger:
+    platform: state
+    entity_id: input_number.speed
+    
+  action:
+    - service: mqtt.publish
+      data_template:
+        topic: homeassistant/light/ESP-3dc22b/effect/speed/set
+        payload_template: "{{ trigger.to_state.state | int }}"
+    
+- alias: Gyver Scale
+  trigger:
+    platform: state
+    entity_id: input_number.scale
+    
+  action:
+    - service: mqtt.publish
+      data_template:
+        topic: homeassistant/light/ESP-3dc22b/effect/scale/set
+        payload_template: "{{ trigger.to_state.state | int }}"
+
+```
+
+3dc22b - заменить на ID чипа ESP,  он будет виден в названии лампы и в entity_id в конце строки после знака _
+Настройка mqtt появится в wi-fi менеджере при первом запуске. В первый раз надо прошить, полностью стерев ESP
+
 ## FAQ
 ### Основные вопросы
 В: Как скачать с этого грёбаного сайта?  
