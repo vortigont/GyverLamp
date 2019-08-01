@@ -121,7 +121,7 @@
 	
 <a id="chapter-5"></a>
 
-## Добавление ползунков Scale Speed в Home Assistant
+## Добавление ползунков Scale, Speed в Home Assistant
 
 # в configuration.yaml
 ```
