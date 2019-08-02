@@ -136,7 +136,7 @@ input_number:
   scale:
     name: Scale
     initial: 30
-    min: 0
+    min: 1
     max: 255
     step: 1
 ```
