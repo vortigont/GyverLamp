@@ -36,7 +36,7 @@
 #define CURRENT_LIMIT 2000    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 #define WIDTH 16              // ширина матрицы
-#define HEIGHT 16             // высота матрицы
+#define HEIGHT 11             // высота матрицы
 
 #define COLOR_ORDER GRB       // порядок цветов на ленте. Если цвет отображается некорректно - меняйте. Начать можно с RGB
 
@@ -50,7 +50,7 @@
 #define ESP_MODE 1
 // 0 - точка доступа
 // 1 - локальный
-byte IP_AP[] = {192, 168, 1, 100};   // статический IP точки доступа (менять только последнюю цифру)
+byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки доступа (менять только последнюю цифру)
 //byte IP_STA[] = {192, 168, 1, 220};  // статический IP локальный (менять только последнюю цифру)
 
 // ----- AP (точка доступа) -------
@@ -73,7 +73,7 @@ byte IP_AP[] = {192, 168, 1, 100};   // статический IP точки д�
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
 #define FASTLED_ALLOW_INTERRUPTS 0
 #define FASTLED_ESP8266_RAW_PIN_ORDER
-#define NTP_INTERVAL 60 * 1000    // обновление (1 минута)
+#define NTP_INTERVAL 600 * 1000    // обновление (1 минута)
 
 //#define DEBUG
 
@@ -199,7 +199,7 @@ void saveConfigCallback () {
 
 void setup() {
 
-  ESP.wdtDisable();
+  //ESP.wdtDisable();
   //ESP.wdtEnable(WDTO_8S);
 
   // ЛЕНТА
@@ -293,30 +293,35 @@ void setup() {
   //EEPROM.begin(202);
   
   delay(50);
+  
   if (EEPROM.read(198) != 20) {   // первый запуск
     EEPROM.write(198, 20);
-    EEPROM.commit();
+    //EEPROM.commit();
 
     for (byte i = 0; i < MODE_AMOUNT; i++) {
       EEPROM.put(3 * i + 40, modes[i]);
-      EEPROM.commit();
+      //EEPROM.commit();
     }
     for (byte i = 0; i < 7; i++) {
       EEPROM.write(5 * i, alarm[i].state);   // рассвет
       eeWriteInt(5 * i + 1, alarm[i].time);
-      EEPROM.commit();
+      //EEPROM.commit();
     }
     EEPROM.write(199, 0);   // рассвет
     EEPROM.write(200, 0);   // режим
+    
     EEPROM.commit();
   }
+
   for (byte i = 0; i < MODE_AMOUNT; i++) {
     EEPROM.get(3 * i + 40, modes[i]);
   }
+  
   for (byte i = 0; i < 7; i++) {
     alarm[i].state = EEPROM.read(5 * i);
     alarm[i].time = eeGetInt(5 * i + 1);
   }
+  
   dawnMode = EEPROM.read(199);
   currentMode = (int8_t)EEPROM.read(200);
 
@@ -449,7 +454,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Command arrived: speed "); Serial.println(Payload);
       #endif
 
-      modes[currentMode].speed = Payload.toInt();
+      modes[currentMode].speed = 255 - Payload.toInt();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
@@ -463,6 +468,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Command arrived: scale "); Serial.println(Payload);
       #endif
 
+      if (currentMode == 17 && Payload.toInt() > 100) Payload = "100";
+      
       modes[currentMode].scale = Payload.toInt();
       loadingFlag = true;
       settChanged = true;
@@ -560,7 +567,7 @@ void HomeAssistantSendDiscoverConfig() {
   mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), "");
   #endif
 
-  mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str()) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+  mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
 }
 
 void loop() {
@@ -575,7 +582,7 @@ void loop() {
 
   ArduinoOTA.handle();
   
-  ESP.wdtFeed();   // пнуть собаку
+  //ESP.wdtFeed();   // пнуть собаку
   yield();
 }
 
