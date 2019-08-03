@@ -228,7 +228,7 @@ void setup() {
 
     Serial.print("connected! IP address: ");
     Serial.print(WiFi.localIP());
-    Serial.print(" Signal strength:");
+    Serial.print(". Signal strength: ");
     Serial.print(2*(WiFi.RSSI()+100));
     Serial.println("%");
 
@@ -242,6 +242,10 @@ void setup() {
     Serial.println("Кб");
     #endif
 
+    if (!MDNS.begin(clientId)) {
+        Serial.println("Error setting up MDNS responder!");
+    }
+  
     ArduinoOTA.onStart([]() {
       Serial.println("OTA Start");
     });
@@ -316,6 +320,7 @@ void setup() {
   memset(matrixValue, 0, sizeof(matrixValue));
   randomSeed(micros());
   webserver();
+  MDNS.addService("http", "tcp", 80);
   
 }
 
@@ -325,6 +330,7 @@ void loop() {
   eepromTick();
   timeTick();
   buttonTick();
+  MDNS.update();
   http->handleClient();
 
   if (USE_MQTT && !mqttclient.connected()) MQTTreconnect();
