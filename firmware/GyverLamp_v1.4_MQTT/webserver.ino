@@ -1,29 +1,41 @@
-void webserver(){
+void webserver() {
   
-  http.onNotFound(routeNotFound);
+  http = new(ESP8266WebServer);
+
+  if (http !=NULL) {
+    Serial.print("Запущен веб сервер по адресу: http://"); 
+    Serial.print(WiFi.localIP());
+    Serial.println("/"); 
+    
+  } else {
+    Serial.println("Ошибка создания веб сервера. ");
+  }
+  
+  http->onNotFound(routeNotFound);
 
   /** главная */
-  http.on("/", routeHome); 
+  http->on("/", routeHome); 
   /** прием конфигурации */
-  http.on("/setconfig", routeSetConfig); 
+  http->on("/setconfig", routeSetConfig); 
   /** получить текущие настройки/конфигурацию */
-  http.on("/getconfig", routeGetConfig); 
+  http->on("/getconfig", routeGetConfig); 
   
   /** страница настройка таймера вкл/выкл */
-//  http.on("/timer", routeTimer); 
+//  http->on("/timer", routeTimer); 
   /** прием конфигурации таймера вкл/выкл */
-//  http.on("/settimerconfig", routeGetTimerConfig); 
+//  http->on("/settimerconfig", routeGetTimerConfig); 
   /** получить текущие настройки/конфигурацию таймера вкл/выкл */
-//  http.on("/gettimerconfig", routeSetTimerConfig); 
+//  http->on("/gettimerconfig", routeSetTimerConfig); 
   
   /** страница настройка будильника */
-  http.on("/alarm", routeAlarm); 
+  http->on("/alarm", routeAlarm); 
   /** прием конфигурации будильника */
-  http.on("/setalarmconfig", routeSetAlarmConfig); 
+  http->on("/setalarmconfig", routeSetAlarmConfig); 
   /** получить текущие настройки/конфигурацию будильника */
-  http.on("/getalarmconfig", routeGetAlarmConfig); 
+  http->on("/getalarmconfig", routeGetAlarmConfig); 
   
-  http.begin();
+  //http.begin();
+  http->begin();
   
 }
 
@@ -125,8 +137,8 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200){
     html += "</body>";
   html += "</html>";
   
-  http.sendHeader("Cache-Control","max-age=0, private, must-revalidate");
-  http.send(code, "text/html; charset=utf-8", html); 
+  http->sendHeader("Cache-Control","max-age=0, private, must-revalidate");
+  http->send(code, "text/html; charset=utf-8", html); 
 }
 
 /**
@@ -137,14 +149,14 @@ void routeNotFound() {
   
   out = "Путь не найден";
   out += "<br />URI: ";
-  out += http.uri();
+  out += http->uri();
   out += "<br />Method: ";
-  out += (http.method() == HTTP_GET) ? "GET" : "POST";
+  out += (http->method() == HTTP_GET) ? "GET" : "POST";
   out += "<br />Arguments: ";
-  out += http.args();
+  out += http->args();
   out += "<br /><pre>";
-  for (uint8_t i = 0; i < http.args(); i++) {
-    out += " " + http.argName(i) + ": " + http.arg(i) + "<br />";
+  for (uint8_t i = 0; i < http->args(); i++) {
+    out += " " + http->argName(i) + ": " + http->arg(i) + "<br />";
   }
   out += "</pre><hr /><a class='ui-link' data-ajax='false' href=\"/\">Перейти на главную</a>";
   responseHtml(out, "Ошибка 404", 404);
@@ -165,27 +177,27 @@ void routeGetConfig(){
   out += "\"on\":\"" + String(ONflag) + "\"";
   out += "}";
   
-  http.send(200, "text/json", out);
+  http->send(200, "text/json", out);
 }
 
 /**
  * изменение/применение новой конфигурации
  */
 void routeSetConfig(){
-  String out;
   
-  if(http.hasArg("on")){
+  if (http->hasArg("on")) {
     
-    ONflag = (http.arg("on").toInt() > 0) ? true : false;
+    ONflag = (http->arg("on").toInt() > 0) ? true : false;
     changePower();
+    sendCurrent();
     
   }
   
-  if(http.hasArg("currentMode")){
+  if (http->hasArg("currentMode")){
     
     String value;
 
-    value = http.arg("currentMode");
+    value = http->arg("currentMode");
     
     currentMode =  value.toInt();
            
@@ -193,38 +205,46 @@ void routeSetConfig(){
     
     manualOff = true;
     dawnFlag = false;
-    loadingFlag = true;
     saveEEPROM();
     loadingFlag = true;
     FastLED.clear();
-    FastLED.setBrightness(modes[currentMode].brightness);
     delay(1);
-    changePower();
+    sendCurrent();
+    FastLED.setBrightness(modes[currentMode].brightness);
+    
   }
   
-  if(http.hasArg("scale")){
-    modes[currentMode].scale = http.arg("scale").toInt();
+  if(http->hasArg("scale")){
+
+    byte scale = http->arg("scale").toInt();
+    if (currentMode == 17 && scale > 100) scale = 100;
+    
+    modes[currentMode].scale = scale;
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
+
   }
   
-  if(http.hasArg("brightness")){
-    modes[currentMode].brightness = http.arg("brightness").toInt();
+  if(http->hasArg("brightness")){
+    modes[currentMode].brightness = http->arg("brightness").toInt();
     FastLED.setBrightness(modes[currentMode].brightness);
     settChanged = true;
     eepromTimer = millis();
+
   }
   
-  if(http.hasArg("speed")){
-    modes[currentMode].speed = http.arg("speed").toInt();
+  if(http->hasArg("speed")){
+    modes[currentMode].speed = 255 - http->arg("speed").toInt();
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
+
   }
   
   /** в знак завершения операции отправим текущую конфигурацию */
   routeGetConfig();
+  MQTTUpdateState();
   
 }
 
@@ -261,19 +281,19 @@ void routeSetAlarmConfig(){
   
   for (byte i = 0; i < 7; i++) {
     
-    if(http.hasArg("day_"+String(i))){
-      alarm[i].state = (http.arg("day_" + String(i)).toInt() > 0);
+    if(http->hasArg("day_"+String(i))){
+      alarm[i].state = (http->arg("day_" + String(i)).toInt() > 0);
       saveAlarm(i);
     }
-    if(http.hasArg("time_"+String(i))){
+    if(http->hasArg("time_"+String(i))){
       
-      alarm[i].time = http.arg("time_" + String(i)).substring(0,2).toInt() * 60 + http.arg("time_" + String(i)).substring(3,5).toInt();
+      alarm[i].time = http->arg("time_" + String(i)).substring(0,2).toInt() * 60 + http->arg("time_" + String(i)).substring(3,5).toInt();
       saveAlarm(i);
     }
   }
   
-  if(http.hasArg("dawnMode")){
-    dawnMode = http.arg("dawnMode").toInt();
+  if(http->hasArg("dawnMode")){
+    dawnMode = http->arg("dawnMode").toInt();
     saveDawnMmode();
   }
   
@@ -299,7 +319,7 @@ void routeGetAlarmConfig(){
 
   out += "\"dawnMode\":\"" + String(dawnMode) + "\"}";
   
-  http.send(200, "text/json", out);
+  http->send(200, "text/json", out);
 }
 
 /**
@@ -351,7 +371,7 @@ void routeHome(){
       
       out += "<div class='ui-field-contain'>";
         out += "<label for='speed'>Скорость:</label>";
-        out += "<input type='range' name='speed' id='speed' value='50' min='0' max='100' data-highlight='true'>";
+        out += "<input type='range' name='speed' id='speed' value='50' min='0' max='255' data-highlight='true'>";
       out += "</div>";
       
       out += "<div class='ui-field-contain'>";

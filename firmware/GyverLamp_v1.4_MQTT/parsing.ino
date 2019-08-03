@@ -71,6 +71,7 @@ void parseUDP() {
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(reply);
     Udp.endPacket();
+    MQTTUpdateState();
   }
 }
 

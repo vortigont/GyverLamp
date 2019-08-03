@@ -183,9 +183,12 @@ void colorsRoutine() {
 
 // --------------------------------- ЦВЕТ ------------------------------------
 void colorRoutine() {
+  //for (int i = 0; i < NUM_LEDS; i++) {
+  //  leds[i] = CHSV(modes[14].scale * 2.5, 255, 255);
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CHSV(modes[14].scale * 2.5, 255, 255);
+    leds[i] = CRGB(r, g, b);
   }
+
 }
 
 // ------------------------------ снегопад 2.0 --------------------------------

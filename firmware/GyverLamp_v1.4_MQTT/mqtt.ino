@@ -20,6 +20,68 @@ void writeMQTTConfig(const char HOST[32], const char USER[32], const char PASSWD
   EEPROM.commit();
 }
 
+int Get_EFFIDX (String effect) {
+  
+  if (effect.equals("Конфетти")) return 0;
+  if (effect.equals("Огонь")) return 1;
+  if (effect.equals("Радуга верт.")) return 2;
+  if (effect.equals("Радуга гориз.")) return 3;
+  if (effect.equals("Смена цвета")) return 4;
+  if (effect.equals("Безумие 3D")) return 5;
+  if (effect.equals("Облака 3D")) return 6;
+  if (effect.equals("Лава 3D")) return 7;
+  if (effect.equals("Плазма 3D")) return 8;
+  if (effect.equals("Радуга 3D")) return 9;
+  if (effect.equals("Павлин 3D")) return 10;
+  if (effect.equals("Зебра 3D")) return 11;
+  if (effect.equals("Лес 3D")) return 12;
+  if (effect.equals("Океан 3D")) return 13;
+  if (effect.equals("Цвет")) return 14;
+  if (effect.equals("Снегопад")) return 15;
+  if (effect.equals("Матрица")) return 16;
+  if (effect.equals("Светлячки")) return 17;
+
+}
+
+String Get_EFFName (int eff_idx) {
+
+  switch (eff_idx) {
+    case 0: return "Конфетти";
+    case 1: return "Огонь";
+    case 2: return "Радуга верт.";
+    case 3: return "Радуга гориз.";
+    case 4: return "Смена цвета";
+    case 5: return "Безумие 3D";
+    case 6: return "Облака 3D";
+    case 7: return "Лава 3D";
+    case 8: return "Плазма 3D";
+    case 9: return "Радуга 3D";
+    case 10: return "Павлин 3D";
+    case 11: return "Зебра 3D";
+    case 12: return "Лес 3D";
+    case 13: return "Океан 3D";
+    case 14: return "Цвет";
+    case 15: return "Снегопад";
+    case 16: return "Матрица";
+    case 17: return "Светлячки";
+  }
+
+}
+
+void MQTTUpdateState () {
+  
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/status").c_str(), ONflag ? "ON" : "OFF");
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/brightness/status").c_str(), String(modes[currentMode].brightness).c_str());
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/status").c_str(), Get_EFFName(currentMode).c_str());
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/speed/status").c_str(), String(modes[currentMode].speed).c_str());
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str(), String(modes[currentMode].scale).c_str());
+
+   char sRGB[15];
+   sprintf(sRGB, "%d,%d,%d", r, g, b);
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB); yield();
+
+}
+
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   String Payload = "";
 
@@ -40,19 +102,11 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       Serial.println(Payload);
       #endif
 
-      if (Payload == "ON")  {
-        ONflag = true;
-        changePower();
-        sendCurrent();
-        mqttclient.publish(String("homeassistant/light/"+clientId+"/status").c_str(), "ON");
-      }
+      ONflag = (Payload == "ON") ? true : false;      
+      changePower();
+      sendCurrent();
+      MQTTUpdateState();
       
-      if (Payload == "OFF") {
-        ONflag = false;
-        changePower();
-        sendCurrent();
-        mqttclient.publish(String("homeassistant/light/"+clientId+"/status").c_str(), "OFF");
-      }
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/brightness/set") {
@@ -64,7 +118,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       FastLED.setBrightness(modes[currentMode].brightness);
       settChanged = true;
       eepromTimer = millis();
-      mqttclient.publish(String("homeassistant/light/"+clientId+"/brightness/status").c_str(), String(modes[currentMode].brightness).c_str());
+      MQTTUpdateState();
 
   }
 
@@ -73,60 +127,31 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Command arrived: effect set to "); Serial.println(Payload);
       #endif
 
+      currentMode = Get_EFFIDX(Payload);
       saveEEPROM();
-
-      if (Payload.equals("Конфетти")) currentMode = 0;
-      if (Payload.equals("Огонь")) currentMode = 1;
-      if (Payload.equals("Радуга верт.")) currentMode = 2;
-      if (Payload.equals("Радуга гориз.")) currentMode = 3;
-      if (Payload.equals("Смена цвета")) currentMode = 4;
-      if (Payload.equals("Безумие 3D")) currentMode = 5;
-      if (Payload.equals("Облака 3D")) currentMode = 6;
-      if (Payload.equals("Лава 3D")) currentMode = 7;
-      if (Payload.equals("Плазма 3D")) currentMode = 8;
-      if (Payload.equals("Радуга 3D")) currentMode = 9;
-      if (Payload.equals("Павлин 3D")) currentMode = 10;
-      if (Payload.equals("Зебра 3D")) currentMode = 11;
-      if (Payload.equals("Лес 3D")) currentMode = 12;
-      if (Payload.equals("Океан 3D")) currentMode = 13;
-      if (Payload.equals("Цвет")) currentMode = 14;
-      if (Payload.equals("Снегопад")) currentMode = 15;
-      if (Payload.equals("Матрица")) currentMode = 16;
-      if (Payload.equals("Светлячки")) currentMode = 17;
-
       loadingFlag = true;
       FastLED.clear();
       delay(1);
       sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
-      
-      mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/status").c_str(), Payload.c_str());
-
+      MQTTUpdateState();
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/rgb/set") {
       #ifdef DEBUG
       Serial.print("Command arrived: rgb "); Serial.println(Payload);
       #endif
-        
-      int r = getValue(Payload, ',', 0).toInt();
-      int g = getValue(Payload, ',', 1).toInt();
-      int b = getValue(Payload, ',', 2).toInt();
-
-      FastLED.clear();
-
-      for (int i = 0; i < NUM_LEDS; i++) {
-        leds[i] = CRGB(r, g, b);
-      }
+      
+      r = getValue(Payload, ',', 0).toInt();
+      g = getValue(Payload, ',', 1).toInt();
+      b = getValue(Payload, ',', 2).toInt();
 
       currentMode = 14;
       loadingFlag = true;
       delay(1);
       sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
-
-      mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), Payload.c_str());
-      mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/status").c_str(), "Цвет");
+      MQTTUpdateState();
 
   }
 
@@ -139,8 +164,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
-
-      mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/speed/status").c_str(), Payload.c_str());
+      MQTTUpdateState();
 
   }
 
@@ -155,8 +179,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
-
-      mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str(), Payload.c_str());
+      MQTTUpdateState();
 
   }
 
@@ -204,6 +227,8 @@ void MQTTreconnect() {
           
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/set").c_str());
+
+            MQTTUpdateState(); yield();
           
         } else {
   
@@ -217,14 +242,14 @@ void MQTTreconnect() {
 
 void HomeAssistantSendDiscoverConfig() {
 
-  DynamicJsonDocument hass_discover(2048);
+  DynamicJsonDocument hass_discover(1024);
   
   hass_discover["name"] = "Gyver Lamp "+ clientId; // name
   hass_discover["uniq_id"] = String(ESP.getChipId(), HEX); // unique_id
 
   hass_discover["bri_cmd_t"] = "homeassistant/light/"+clientId+"/brightness/set";     // brightness_command_topic
   hass_discover["bri_stat_t"] = "homeassistant/light/"+clientId+"/brightness/status"; // brightness_state_topic
-  hass_discover["bri_scl"] = 100;
+  hass_discover["bri_scl"] = 255;
 
   hass_discover["cmd_t"] = "homeassistant/light/"+clientId+"/switch"; // command_topic
   hass_discover["stat_t"] = "homeassistant/light/"+clientId+"/status"; // state_topic
@@ -245,7 +270,7 @@ void HomeAssistantSendDiscoverConfig() {
 
   #ifdef DEBUG
   Serial.println(hass_discover_str);
-  mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), "");
+  //mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), "");
   #endif
 
   mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");

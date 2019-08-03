@@ -9,13 +9,16 @@ void buttonTick() {
       loadingFlag = true;
       FastLED.setBrightness(modes[currentMode].brightness);
       changePower();
+      // MQTTUpdateState();;
     } else {
       if (ONflag) {
         ONflag = false;
         changePower();
+        MQTTUpdateState();;
       } else {
         ONflag = true;
         changePower();
+        MQTTUpdateState();
       }
     }
   }
@@ -28,6 +31,7 @@ void buttonTick() {
     eepromTimer = millis();
     FastLED.clear();
     delay(1);
+    MQTTUpdateState();
   }
   if (ONflag && touch.isTriple()) {
     if (--currentMode < 0) currentMode = 0;
@@ -37,6 +41,7 @@ void buttonTick() {
     eepromTimer = millis();
     FastLED.clear();
     delay(1);
+    MQTTUpdateState();
   }
 
   if (ONflag && touch.isHolded()) {
@@ -55,5 +60,6 @@ void buttonTick() {
     FastLED.setBrightness(modes[currentMode].brightness);
     settChanged = true;
     eepromTimer = millis();
+    // MQTTUpdateState();
   }
 }

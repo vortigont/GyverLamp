@@ -33,7 +33,7 @@ void effectsTick() {
           break;
         case 13: oceanNoise();
           break;
-        case 14: //colorRoutine();
+        case 14: colorRoutine();
           break;
         case 15: snowRoutine();
           break;

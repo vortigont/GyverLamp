@@ -96,13 +96,12 @@ byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки д�
 
 // ------------------- ТИПЫ --------------------
 CRGB leds[NUM_LEDS];
-//WiFiServer server(80);
 WiFiUDP Udp;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT * 3600, NTP_INTERVAL);
 timerMinim timeTimer(3000);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
-ESP8266WebServer http(8080); // запуск слушателя 8080 порта(эйкей вебсервер)
+ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 //const char* autoConnectSSID = AC_SSID;
@@ -119,6 +118,10 @@ struct {
   byte speed = 30;
   byte scale = 40;
 } modes[MODE_AMOUNT];
+
+byte r = 255;
+byte g = 255;
+byte b = 255;
 
 struct {
   boolean state = false;
@@ -145,7 +148,7 @@ unsigned char matrixValue[8][16];
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
 
-// айдии клиента, менять для интеграции с системами умного дома в случае необходимости
+// ID клиента, менять для интеграции с системами умного дома в случае необходимости
 String clientId = "ESP-"+String(ESP.getChipId(), HEX);
 
 bool USE_MQTT = true; // используем  MQTT?
@@ -224,7 +227,20 @@ void setup() {
     };
 
     Serial.print("connected! IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.print(WiFi.localIP());
+    Serial.print(" Signal strength:");
+    Serial.print(2*(WiFi.RSSI()+100));
+    Serial.println("%");
+
+    #ifdef DEBUG
+    Serial.print("Объем оперативной памяти: ");
+    Serial.print(ESP.getFlashChipSize()/1024/8);
+    Serial.println("Кб");
+    
+    Serial.print("Свободно оперативной памяти: ");
+    Serial.print(ESP.getFreeHeap()/1024);
+    Serial.println("Кб");
+    #endif
 
     ArduinoOTA.onStart([]() {
       Serial.println("OTA Start");
@@ -309,7 +325,7 @@ void loop() {
   eepromTick();
   timeTick();
   buttonTick();
-  http.handleClient();
+  http->handleClient();
 
   if (USE_MQTT && !mqttclient.connected()) MQTTreconnect();
   if (USE_MQTT) mqttclient.loop();
