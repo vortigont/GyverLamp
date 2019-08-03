@@ -137,7 +137,7 @@ input_number:
     name: Scale
     initial: 30
     min: 1
-    max: 255
+    max: 100
     step: 1
 ```
 # в automations.yaml
