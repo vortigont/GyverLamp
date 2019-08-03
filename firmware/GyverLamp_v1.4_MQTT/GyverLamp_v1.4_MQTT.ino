@@ -75,7 +75,7 @@ byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки д�
 #define FASTLED_ESP8266_RAW_PIN_ORDER
 #define NTP_INTERVAL 600 * 1000    // обновление (1 минута)
 
-//#define DEBUG
+#define DEBUG
 
 #include "timerMinim.h"
 #include <FastLED.h>

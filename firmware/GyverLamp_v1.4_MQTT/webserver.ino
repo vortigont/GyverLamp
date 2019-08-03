@@ -3,22 +3,15 @@ void webserver() {
   http = new(ESP8266WebServer);
 
   if (http !=NULL) {
-    Serial.print("Запущен веб сервер по адресу: http://"); 
-    Serial.print(WiFi.localIP());
-    Serial.println("/"); 
-    
-  } else {
-    Serial.println("Ошибка создания веб сервера. ");
-  }
-  
+
   http->onNotFound(routeNotFound);
 
-  /** главная */
-  http->on("/", routeHome); 
-  /** прием конфигурации */
-  http->on("/setconfig", routeSetConfig); 
-  /** получить текущие настройки/конфигурацию */
-  http->on("/getconfig", routeGetConfig); 
+    /** главная */
+    http->on("/", routeHome); 
+    /** прием конфигурации */
+    http->on("/setconfig", routeSetConfig); 
+    /** получить текущие настройки/конфигурацию */
+    http->on("/getconfig", routeGetConfig); 
   
   /** страница настройка таймера вкл/выкл */
 //  http->on("/timer", routeTimer); 
@@ -27,15 +20,23 @@ void webserver() {
   /** получить текущие настройки/конфигурацию таймера вкл/выкл */
 //  http->on("/gettimerconfig", routeSetTimerConfig); 
   
-  /** страница настройка будильника */
-  http->on("/alarm", routeAlarm); 
-  /** прием конфигурации будильника */
-  http->on("/setalarmconfig", routeSetAlarmConfig); 
-  /** получить текущие настройки/конфигурацию будильника */
-  http->on("/getalarmconfig", routeGetAlarmConfig); 
+    /** страница настройка будильника */
+    http->on("/alarm", routeAlarm); 
+    /** прием конфигурации будильника */
+    http->on("/setalarmconfig", routeSetAlarmConfig); 
+    /** получить текущие настройки/конфигурацию будильника */
+    http->on("/getalarmconfig", routeGetAlarmConfig); 
   
-  //http.begin();
-  http->begin();
+    http->begin();
+
+    Serial.print("Запущен веб сервер по адресу: http://"); 
+    Serial.print(clientId);
+    Serial.println(".local/"); 
+
+  } else {
+    
+    Serial.println("Ошибка создания веб сервера. ");
+  }
   
 }
 
@@ -48,6 +49,7 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200){
   html = "<html>";
     html += "<head>";
       html += "<title>" + title + "</title>";
+      html += "<meta http-equiv=\"refresh\" content=\"20\" >";
       html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1\" />";
       html += "<link rel=\"stylesheet\" href=\"https://demos.jquerymobile.com/1.4.5/css/themes/default/jquery.mobile-1.4.5.min.css\">";
       html += "<link rel=\"stylesheet\" href=\"http://fonts.googleapis.com/css?family=Open+Sans:300,400,700\">";
