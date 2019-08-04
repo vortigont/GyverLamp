@@ -96,6 +96,7 @@ byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки д�
 #include <ArduinoOTA.h>
 
 // ------------------- ТИПЫ --------------------
+
 CRGB leds[NUM_LEDS];
 WiFiUDP Udp;
 WiFiUDP ntpUDP;
@@ -105,8 +106,7 @@ GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
-//const char* autoConnectSSID = AC_SSID;
-//const char* autoConnectPass = AC_PASS;
+
 const char AP_NameChar[] = AP_SSID;
 const char WiFiPassword[] = AP_PASS;
 unsigned int localPort = AP_PORT;
@@ -182,6 +182,9 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println();
+  
+  EEPROM.begin(512);
+
 
   // WI-FI
   if (ESP_MODE == 0) {    // режим точки доступа
@@ -224,8 +227,6 @@ void setup() {
     strcpy(mqtt_server, custom_mqtt_server.getValue());
     strcpy(mqtt_user, custom_mqtt_username.getValue());
     strcpy(mqtt_password, custom_mqtt_password.getValue());
-
-    EEPROM.begin(512);
 
     if (shouldSaveConfig) {
       
@@ -336,6 +337,14 @@ void setup() {
   randomSeed(micros());
   webserver();
   MDNS.addService("http", "tcp", 80);
+
+  MQTTconfig MQTTConfig = readMQTTConfig();
+    
+  if ((String(MQTTConfig.HOST) == "none") || (ESP_MODE == 0)) {
+
+    USE_MQTT = false;
+    Serial.println("Использование MQTT сервера отключено.");
+  }
 
    _BTN_CONNECTED = !digitalRead(BTN_PIN);
 
