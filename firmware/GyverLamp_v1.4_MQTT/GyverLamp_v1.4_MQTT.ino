@@ -13,9 +13,14 @@
   - Исправлены тормоза в режиме точки доступа
 
   Версия 1.4 MQTT Edition:
+  - Удалена настройка статического IP - статический IP лучше настраивать на стороне роутера
   - Добавлена поддержка MQTT сервера
   - Добавлена интеграция с Home Assistant через MQTT Discover - лампа просто появится в Home Assistant
   - Добавлена возможность выбирать цвет из RGB палитры HomeAssistant
+  - Добавлено автообнаружение подключения кнопки
+  - Добавлен запуск портала конфигурации при неудачном подключении к WiFi сети
+  - Добавлено адаптивное подключение к MQTT серверу в случае потери соединениия
+  - Добавлено принудительное включение эффекта матрицы во время OTA обновлении
 
 */
 
@@ -51,16 +56,11 @@
 // 0 - точка доступа
 // 1 - локальный
 byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки доступа (менять только последнюю цифру)
-//byte IP_STA[] = {192, 168, 1, 220};  // статический IP локальный (менять только последнюю цифру)
 
 // ----- AP (точка доступа) -------
 #define AP_SSID "GyverLamp"
 #define AP_PASS "12345678"
 #define AP_PORT 8888
-
-// -------- Менеджер WiFi ---------
-//#define AC_SSID "AutoConnectAP"
-//#define AC_PASS "12345678"
 
 // ============= ДЛЯ РАЗРАБОТЧИКОВ =============
 #define LED_PIN 2             // пин ленты
@@ -152,10 +152,7 @@ PubSubClient mqttclient(espClient);
 String clientId = "ESP-"+String(ESP.getChipId(), HEX);
 
 bool USE_MQTT = true; // используем  MQTT?
-
-char mqtt_server[32];
-char mqtt_user[32];
-char mqtt_password[32];
+bool _BTN_CONNECTED = true; 
 
 struct MQTTconfig {
   char HOST[32];
@@ -194,17 +191,22 @@ void setup() {
     WiFi.softAP(AP_NameChar, WiFiPassword);
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("Access point Mode");
-    Serial.print("AP IP address: ");
+    Serial.println("AP IP address: ");
     Serial.println(myIP);
 
   } else {                // подключаемся к роутеру
     Serial.print("WiFi manager...");
+    digitalWrite(LED_BUILTIN, HIGH);
+
+    char mqtt_server[32] = "";
+    char mqtt_user[32] = "DEVS_USER";
+    char mqtt_password[32] = "DEVS_PASSWD";
     
+    WiFiManager wifiManager;
     WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
     WiFiManagerParameter custom_mqtt_username("user", "mqtt user", mqtt_user, 10);
     WiFiManagerParameter custom_mqtt_password("password", "mqtt password", mqtt_password, 10);
     
-    WiFiManager wifiManager;
     wifiManager.setSaveConfigCallback(saveConfigCallback);
     wifiManager.setDebugOutput(false);
 
@@ -212,7 +214,11 @@ void setup() {
     wifiManager.addParameter(&custom_mqtt_username);
     wifiManager.addParameter(&custom_mqtt_password);
 
-    wifiManager.autoConnect();
+    if (!wifiManager.autoConnect()) {
+      if (!wifiManager.startConfigPortal()) {
+         Serial.println("failed to connect and hit timeout");
+      }      
+    }
 
     strcpy(mqtt_server, custom_mqtt_server.getValue());
     strcpy(mqtt_user, custom_mqtt_username.getValue());
@@ -223,7 +229,7 @@ void setup() {
     if (shouldSaveConfig) {
       
       writeMQTTConfig(mqtt_server, mqtt_user,mqtt_password);
-      Serial.println("MQTT config written");
+      Serial.println("MQTT configuration written");
     };
 
     Serial.print("connected! IP address: ");
@@ -231,15 +237,16 @@ void setup() {
     Serial.print(". Signal strength: ");
     Serial.print(2*(WiFi.RSSI()+100));
     Serial.println("%");
+    digitalWrite(LED_BUILTIN, LOW);
 
     #ifdef DEBUG
-    Serial.print("Объем оперативной памяти: ");
+    Serial.print("onChip memory size: ");
     Serial.print(ESP.getFlashChipSize()/1024/8);
-    Serial.println("Кб");
+    Serial.println("Kb");
     
-    Serial.print("Свободно оперативной памяти: ");
+    Serial.print("Free Heap size: ");
     Serial.print(ESP.getFreeHeap()/1024);
-    Serial.println("Кб");
+    Serial.println("Kb");
     #endif
 
     if (!MDNS.begin(clientId)) {
@@ -248,14 +255,20 @@ void setup() {
   
     ArduinoOTA.onStart([]() {
       Serial.println("OTA Start");
+      currentMode = 16;
+      loadingFlag = true;
+      FastLED.clear();
+      FastLED.setBrightness(modes[currentMode].brightness);
+      
     });
     
     ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");  //  "Завершение OTA-апдейта"
+      Serial.println("OTA End");  //  "Завершение OTA-апдейта"
     });
     
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      effectsTick();
+      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
     });
     
     ArduinoOTA.onError([](ota_error_t error) {
@@ -321,6 +334,12 @@ void setup() {
   randomSeed(micros());
   webserver();
   MDNS.addService("http", "tcp", 80);
+
+   _BTN_CONNECTED = !digitalRead(BTN_PIN);
+
+  #ifdef DEBUG
+  _BTN_CONNECTED ? Serial.println("Обнаружена сенсорная кнопка") : Serial.println("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
+  #endif
   
 }
 

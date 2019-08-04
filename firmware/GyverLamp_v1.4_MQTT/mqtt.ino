@@ -160,7 +160,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Command arrived: speed "); Serial.println(Payload);
       #endif
 
-      modes[currentMode].speed = 255 - Payload.toInt();
+      modes[currentMode].speed = Payload.toInt();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
@@ -185,17 +185,19 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
 }
 
-unsigned long timing = 0;
+uint32_t timing = 0;
+uint16_t mqtt_timeout = 5000;
+uint8_t mqtt_reconnection_count = 0;
 
 void MQTTreconnect() {
-  if (USE_MQTT && (millis() - timing > 5000)) {
+  if (USE_MQTT && (millis() - timing > mqtt_timeout)) {
 
       MQTTconfig MQTTConfig = readMQTTConfig();
 
       mqttclient.setServer(MQTTConfig.HOST, 1883);
       mqttclient.setCallback(MQTTcallback);
 
-      if ((millis() - timing > 5000) && !mqttclient.connected()) {
+      if ((millis() - timing > mqtt_timeout) && !mqttclient.connected()) {
         timing = millis();
         Serial.print("Attempting MQTT connection...");
 
@@ -209,7 +211,7 @@ void MQTTreconnect() {
 
             HomeAssistantSendDiscoverConfig();
 
-            // подписываемся на топики      
+            // подписываемся на топики
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/switch").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/status").c_str());
 
@@ -231,10 +233,19 @@ void MQTTreconnect() {
             MQTTUpdateState(); yield();
           
         } else {
-  
+
+          mqtt_reconnection_count += 1;
+          mqtt_timeout *= 2;
+
+          if (mqtt_reconnection_count >= 10) {
+            mqtt_timeout = 5000;
+            mqtt_reconnection_count = 0;
+            
+          }
+          
           Serial.print("failed, rc=");
           Serial.print(mqttclient.state());
-          Serial.println(" try again in 5 seconds");
+          Serial.printf(" try again in %d seconds\n", mqtt_timeout/1000);
         }
       }
     }

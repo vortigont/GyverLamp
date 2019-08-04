@@ -49,7 +49,7 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200){
   html = "<html>";
     html += "<head>";
       html += "<title>" + title + "</title>";
-      html += "<meta http-equiv=\"refresh\" content=\"20\" >";
+      html += "<meta http-equiv=\"refresh\" content=\"30\" >";
       html += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1\" />";
       html += "<link rel=\"stylesheet\" href=\"https://demos.jquerymobile.com/1.4.5/css/themes/default/jquery.mobile-1.4.5.min.css\">";
       html += "<link rel=\"stylesheet\" href=\"http://fonts.googleapis.com/css?family=Open+Sans:300,400,700\">";
@@ -237,7 +237,7 @@ void routeSetConfig(){
   }
   
   if(http->hasArg("speed")){
-    modes[currentMode].speed = 255 - http->arg("speed").toInt();
+    modes[currentMode].speed = http->arg("speed").toInt();
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();

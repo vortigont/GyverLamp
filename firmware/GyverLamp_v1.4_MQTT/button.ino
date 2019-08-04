@@ -1,6 +1,8 @@
 boolean brightDirection;
 
 void buttonTick() {
+  if (!_BTN_CONNECTED) return;
+  
   touch.tick();
   if (touch.isSingle()) {
     if (dawnFlag) {
@@ -33,6 +35,7 @@ void buttonTick() {
     delay(1);
     MQTTUpdateState();
   }
+
   if (ONflag && touch.isTriple()) {
     if (--currentMode < 0) currentMode = 0;
     FastLED.setBrightness(modes[currentMode].brightness);
@@ -60,6 +63,6 @@ void buttonTick() {
     FastLED.setBrightness(modes[currentMode].brightness);
     settChanged = true;
     eepromTimer = millis();
-    // MQTTUpdateState();
+    MQTTUpdateState();
   }
 }
