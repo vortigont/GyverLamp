@@ -15,6 +15,7 @@
   Версия 1.4 MQTT Edition:
   - Удалена настройка статического IP - статический IP лучше настраивать на стороне роутера
   - Добавлена поддержка MQTT сервера
+  - Добавлено ОТА обновление через сетевой порт
   - Добавлена интеграция с Home Assistant через MQTT Discover - лампа просто появится в Home Assistant
   - Добавлена возможность выбирать цвет из RGB палитры HomeAssistant
   - Добавлено автообнаружение подключения кнопки
@@ -255,6 +256,7 @@ void setup() {
   
     ArduinoOTA.onStart([]() {
       Serial.println("OTA Start");
+      ONflag = true;
       currentMode = 16;
       loadingFlag = true;
       FastLED.clear();

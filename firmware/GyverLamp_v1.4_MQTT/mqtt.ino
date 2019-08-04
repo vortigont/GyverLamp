@@ -186,7 +186,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 }
 
 uint32_t timing = 0;
-uint16_t mqtt_timeout = 5000;
+uint32_t mqtt_timeout = 5000;
 uint8_t mqtt_reconnection_count = 0;
 
 void MQTTreconnect() {
