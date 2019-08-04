@@ -255,6 +255,7 @@ void setup() {
   
     ArduinoOTA.onStart([]() {
       Serial.println("OTA Start");
+      ONflag = true;
       currentMode = 16;
       loadingFlag = true;
       FastLED.clear();
