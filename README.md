@@ -121,8 +121,8 @@
     AP_PORT 8888
 	
 <a id="chapter-5"></a>
-
-## Добавление ползунков Scale, Speed в Home Assistant
+## Настройка интеграции с HomeAssistant
+### Добавление ползунков Scale, Speed в Home Assistant
 
 # в configuration.yaml
 ```
