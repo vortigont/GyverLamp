@@ -6,8 +6,9 @@
 * [Материалы и компоненты](#chapter-3)
 * [Как скачать и прошить](#chapter-4)
 * [Настройка интеграции с HomeAssistant](#chapter-5)
-* [FAQ](#chapter-6)
-* [Полезная информация](#chapter-7)
+* [Настройка интеграции с Home Bridge и Apple Home Kit](#chapter-6)
+* [FAQ](#chapter-7)
+* [Полезная информация](#chapter-8)
 [![AlexGyver YouTube](http://alexgyver.ru/git_banner.jpg)](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
 
 <a id="chapter-0"></a>
@@ -169,18 +170,101 @@ input_number:
 **3dc22b - заменить на ID чипа ESP, он будет виден в названии лампы и в entity_id в конце строки после знака подчеркивания.
 Настройка MQTT сервера появится в wi-fi менеджере при первом запуске. Нужно указать адрес MQTT сервера, имя пользователя и пароль для доступа к вашему MQTT серверу.**
 
+<a id="chapter-6"></a>
+## Настройка интеграции с Home Bridge и Apple Home Kit
+
+Для управления из Home Bridge необходимо установить плагин homebridge-mqttthing:
+
+    npm install -g homebridge-mqttthing
+    
+И внести в файл конфигурации некоторые изменения. Переключение эффектов в Home Bridge не предусмотрено, поэтому заведем эффекты в компонент телевизора. Ну чем панель не телевизор? :)
+
+```
+    "accessories": [
+        {
+            "accessory": "mqttthing",
+            "type": "lightbulb",
+            "name": "Gyver Lamp",
+            "url": "http://127.0.01:1883",
+            "mqttPubOptions": {
+                "retain": false
+            },
+            "topics": {
+                "getOn": "homeassistant/light/ESP-3bd20b/status",
+                "setOn": "homeassistant/light/ESP-3bd20b/switch",
+                "getBrightness": "homeassistant/light/ESP-3bd20b/brightness/status",
+                "setBrightness": "homeassistant/light/ESP-3bd20b/brightness/set",
+                "getRGB": "homeassistant/light/ESP-3bd20b/rgb/status",
+                "setRGB": "homeassistant/light/ESP-3bd20b/rgb/set"
+            },
+            "onValue": "ON",
+            "offValue": "OFF"
+        },
+        {
+            "accessory": "mqttthing",
+            "type": "television",
+            "name": "Gyver Lamp Effects",
+            "url": "http://127.0.0.1:1883",
+            "topics": {
+                "setActive": "homeassistant/light/ESP-3bd20b/switch",
+                "getActive": "homeassistant/light/ESP-3bd20b/status",
+                "setActiveInput": "homeassistant/light/ESP-3bd20b/effect/set",
+                "getActiveInput": "homeassistant/light/ESP-3bd20b/effect/status"
+            },
+            "inputs": [
+                {
+                    "name": "Конфетти",
+                    "value": "Конфетти"
+                },
+                {
+                    "name": "Огонь",
+                    "value": "Огонь"
+                },
+                {
+                    "name": "Плазма 3D",
+                    "value": "Плазма 3D"
+                },
+                {
+                    "name": "Лес 3D",
+                    "value": "Лес 3D"
+                },
+                {
+                    "name": "Светлячки",
+                    "value": "Светлячки"
+                }
+            ],
+            "onValue": "ON",
+            "offValue": "OFF"
+        }
+    ]
+
+```
+
+Здесь вместо 3bd20b нужно прописать ID чипа ESP. Как его получить - я писал выше. В итоге после перезагрузки Home Bridge просто и легко у нас в Home Kit  появится два новых устройства: RGB лампа и "телевизор", выходами которого можно переключать эффекты. 
+
+Включение и выключение синхронизируется и в "телевизоре" и в "лампе" и в Home assistant и в веб интерфейсе и в приложении для смартфона. Описанным выше способом можно добавить все остальные эффекты. Ползунки скорости и масштабирования если они необходимы можно добавить как отдельную лампу и управлять через уровень яркости.
+
+
 **В первый раз надо прошить, полностью стерев ESP**
 
 После первого запуска лампа автоматически появится в списке устройств Home Assistant. С помощью MQTT интеграции можно подключить лампу не только к Home Assitant, но и к HomeBridge, ioBroker, а так же к любым системам домашней автоматизации. 
 
 Прошивка с поддержкой MQTT лежит https://github.com/Whilser/GyverLamp/tree/master/firmware/GyverLamp_v1.4_MQTT
 
-### Добавлено
+### Изменения относительно оригинальной прошивки:
 
+* [x] Поддержка работы с MQTT сервером
+* [x] Нативная интеграция с Home Assistant методом Discover
+* [x] Возможность ОТА обновления через сетевой порт с интересным эффектом "матрица" во время обновления
+* [x] Возможность выбирать цвет из палитры Home Assistant либо через MQTT сервер
+* [x] Автоматическое обнаружение подключенной сенсорной кнопки и корректная работа без нее
+* [x] Корректная работа в случае отключения WiFi сигнала либо MQTT брокера (адаптивное подключение)
+* [x] Возможность настроить работу как с MQTT брокером, так и без него без повторной компиляции прошивки. Для этого достаточно при * [x] настройке вместо адреса MQTT сервера ввести none. 
+* [x] Добавлен веб интерфейс управления (не свой, доработал, взял наработки CoOre, который так же создал Fork проекта на GitHub) - * [x] достаточно перейти по адресу http://ESP-<ID>.local/. Вместо <ID> нужно вписать ID чипа ESP8266. Он отображается в названии лампы и в entity_id после знака подчеркивания
 * [x] Возможность выбирать цвет свечения лампы из RGB палитры
 * [x] OTA обновление - второй раз не нужно подключать через USB для прошивки, можно обновить прошивку через сетевой порт
 
-<a id="chapter-6"></a>
+<a id="chapter-7"></a>
 
 ## FAQ
 ### Основные вопросы
@@ -201,7 +285,7 @@ input_number:
 
 ### Вопросы по этому проекту
 
-<a id="chapter-7"></a>
+<a id="chapter-8"></a>
 ## Полезная информация
 * [Мой сайт](http://alexgyver.ru/)
 * [Основной YouTube канал](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
