@@ -7,7 +7,7 @@
 * [Как скачать и прошить](#chapter-4)
 * [Настройка интеграции с HomeAssistant](#chapter-5)
 * [Настройка интеграции с Home Bridge и Apple Home Kit](#chapter-6)
-* [Управляющие топики MQTT (для интеграции с прочими системами домашней автоматизации)](#chapter-7)
+* [Управляющие топики MQTT (для интеграции с системами домашней автоматизации)](#chapter-7)
 * [FAQ](#chapter-8)
 * [Полезная информация](#chapter-9)
 [![AlexGyver YouTube](http://alexgyver.ru/git_banner.jpg)](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
