@@ -7,8 +7,9 @@
 * [Как скачать и прошить](#chapter-4)
 * [Настройка интеграции с HomeAssistant](#chapter-5)
 * [Настройка интеграции с Home Bridge и Apple Home Kit](#chapter-6)
-* [FAQ](#chapter-7)
-* [Полезная информация](#chapter-8)
+* [Управляющие топики MQTT (для интеграции с прочими системами домашней автоматизации)](#chapter-7)
+* [FAQ](#chapter-8)
+* [Полезная информация](#chapter-9)
 [![AlexGyver YouTube](http://alexgyver.ru/git_banner.jpg)](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
 
 <a id="chapter-0"></a>
@@ -265,6 +266,54 @@ input_number:
 * [x] OTA обновление - второй раз не нужно подключать через USB для прошивки, можно обновить прошивку через сетевой порт
 
 <a id="chapter-7"></a>
+### Управляющие топики MQTT (для интеграции с прочими системами домашней автоматизации)
+
+Получение статуса устройств:
+
+```
+-- статус включено/выключено. Статус включено "ON" статус выключено "OFF"
+"homeassistant/light/ESP-ID/status"
+
+-- статус яркости от 0 до 255
+"homeassistant/light/ESP-ID/brightness/status"
+
+-- название эффекта, например "Огонь"
+"homeassistant/light/ESP-ID/effect/status"
+
+-- текущая скорость эффекта
+"homeassistant/light/ESP-ID/effect/speed/status"
+
+-- текущее значение масштабирования эффекта
+"homeassistant/light/ESP-ID/effect/scale/status"
+
+-- значение цвета в RGB палитре, например, 255,255,255 - белый цвет
+"homeassistant/light/ESP-ID/rgb/status"
+```
+
+Управление лампой:
+
+```
+-- включение/выключение. Статус включено "ON" статус выключено "OFF"
+"homeassistant/light/ESP-ID/switch"
+
+-- установить яркость от 0 до 255
+"homeassistant/light/ESP-ID/brightness/set"
+
+-- включение эффекта, например "Огонь"
+"homeassistant/light/ESP-ID/effect/set"
+
+-- установить скорость эффекта
+"homeassistant/light/ESP-ID/effect/speed/set"
+
+-- установить масштабироване эффекта
+"homeassistant/light/ESP-ID/effect/scale/set"
+
+-- установить значение цвета в RGB палитре, например, 255,255,255 - белый цвет
+"homeassistant/light/ESP-ID/rgb/set"
+
+```
+
+<a id="chapter-8"></a>
 
 ## FAQ
 ### Основные вопросы
@@ -285,7 +334,7 @@ input_number:
 
 ### Вопросы по этому проекту
 
-<a id="chapter-8"></a>
+<a id="chapter-9"></a>
 ## Полезная информация
 * [Мой сайт](http://alexgyver.ru/)
 * [Основной YouTube канал](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
