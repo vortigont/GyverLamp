@@ -344,7 +344,7 @@ void routeHome(){
         out += "<label for='currentMode'>Режим:</label>";
         out += "<select name='currentMode' id='currentMode' data-mini='true'>";
           
-          out += "<option value='0'>Конфети</option>";
+          out += "<option value='0'>Конфетти</option>";
           out += "<option value='1'>Огонь</option>";
           out += "<option value='2'>Радуга вертикальная</option>";
           out += "<option value='3'>Радуга горизонтальная</option>";
@@ -368,7 +368,7 @@ void routeHome(){
       
       out += "<div class='ui-field-contain'>";
         out += "<label for='brightness'>Яркость:</label>";
-        out += "<input type='range' name='brightness' id='brightness' value='50' min='0' max='255' data-highlight='true'>";
+        out += "<input type='range' name='brightness' id='brightness' value='50' min='1' max='255' data-highlight='true'>";
       out += "</div>";
       
       out += "<div class='ui-field-contain'>";

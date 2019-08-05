@@ -205,6 +205,9 @@ void MQTTreconnect() {
           if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD)) {
             Serial.println("connected!");
 
+            mqtt_timeout = 5000;
+            mqtt_reconnection_count = 0;
+
             #ifdef DEBUG
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/config").c_str());
             #endif

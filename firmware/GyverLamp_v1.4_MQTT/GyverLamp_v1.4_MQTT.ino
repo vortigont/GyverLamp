@@ -185,7 +185,6 @@ void setup() {
   
   EEPROM.begin(512);
 
-
   // WI-FI
   if (ESP_MODE == 0) {    // режим точки доступа
     WiFi.softAPConfig(IPAddress(IP_AP[0], IP_AP[1], IP_AP[2], IP_AP[3]),
@@ -197,6 +196,7 @@ void setup() {
     Serial.print("Access point Mode");
     Serial.println("AP IP address: ");
     Serial.println(myIP);
+    USE_MQTT = false;
 
   } else {                // подключаемся к роутеру
     Serial.print("WiFi manager...");
@@ -339,7 +339,7 @@ void setup() {
   MDNS.addService("http", "tcp", 80);
 
   MQTTconfig MQTTConfig = readMQTTConfig();
-    
+  
   if ((String(MQTTConfig.HOST) == "none") || (ESP_MODE == 0)) {
 
     USE_MQTT = false;
