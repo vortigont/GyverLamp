@@ -4,7 +4,7 @@ void webserver() {
 
   if (http !=NULL) {
 
-  http->onNotFound(routeNotFound);
+    http->onNotFound(routeNotFound);
 
     /** главная */
     http->on("/", routeHome); 
@@ -384,6 +384,8 @@ void routeHome(){
     
   out += "</form>";
   out += "<script type='text/javascript'>$(()=>{syncConfig('/getconfig','/setconfig');});</script>";
+  out += "<br>";
+  out += getTimeStampString();
 
   responseHtml(out);
 }

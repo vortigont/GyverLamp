@@ -11,7 +11,7 @@ void buttonTick() {
       loadingFlag = true;
       FastLED.setBrightness(modes[currentMode].brightness);
       changePower();
-      // MQTTUpdateState();;
+      MQTTUpdateState();
     } else {
       if (ONflag) {
         ONflag = false;

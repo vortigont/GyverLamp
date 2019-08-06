@@ -74,7 +74,7 @@ byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки д�
 #define FASTLED_INTERRUPT_RETRY_COUNT 0
 #define FASTLED_ALLOW_INTERRUPTS 0
 #define FASTLED_ESP8266_RAW_PIN_ORDER
-#define NTP_INTERVAL 600 * 1000    // обновление (1 минута)
+#define NTP_INTERVAL 600 * 1000    // обновление (10 минут)
 
 //#define DEBUG
 
@@ -95,6 +95,7 @@ byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки д�
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 
+#define MQTT_MAX_PACKET_SIZE 1024
 // ------------------- ТИПЫ --------------------
 
 CRGB leds[NUM_LEDS];
@@ -170,6 +171,8 @@ void saveConfigCallback () {
 
 void setup() {
 
+  //pinMode(2, OUTPUT);
+
   // ЛЕНТА
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection( TypicalLEDStrip )*/;
   FastLED.setBrightness(BRIGHTNESS);
@@ -200,7 +203,7 @@ void setup() {
 
   } else {                // подключаемся к роутеру
     Serial.print("WiFi manager...");
-    digitalWrite(LED_BUILTIN, HIGH);
+    //digitalWrite(2, HIGH);
 
     char mqtt_server[32] = "";
     char mqtt_user[32] = "DEVS_USER";
@@ -239,7 +242,7 @@ void setup() {
     Serial.print(". Signal strength: ");
     Serial.print(2*(WiFi.RSSI()+100));
     Serial.println("%");
-    digitalWrite(LED_BUILTIN, LOW);
+    //digitalWrite(2, LOW);
 
     #ifdef DEBUG
     Serial.print("onChip memory size: ");
@@ -283,7 +286,7 @@ void setup() {
       else if (error == OTA_END_ERROR) Serial.println("End Failed"); 
    });
     
-    ArduinoOTA.begin(); 
+    ArduinoOTA.begin();
   }
   
   Udp.begin(localPort);
@@ -323,6 +326,7 @@ void setup() {
   
   dawnMode = EEPROM.read(199);
   currentMode = (int8_t)EEPROM.read(200);
+  FastLED.setBrightness(modes[currentMode].brightness);
 
   // отправляем настройки
   sendCurrent();

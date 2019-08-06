@@ -161,6 +161,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       #endif
 
       modes[currentMode].speed = Payload.toInt();
+      saveEEPROM();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
@@ -176,6 +177,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       if (currentMode == 17 && Payload.toInt() > 100) Payload = "100";
       
       modes[currentMode].scale = Payload.toInt();
+      saveEEPROM();
       loadingFlag = true;
       settChanged = true;
       eepromTimer = millis();
@@ -209,7 +211,7 @@ void MQTTreconnect() {
             mqtt_reconnection_count = 0;
 
             #ifdef DEBUG
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/config").c_str());
+            //mqttclient.subscribe(String("homeassistant/light/"+clientId+"/config").c_str());
             #endif
 
             HomeAssistantSendDiscoverConfig();
@@ -283,7 +285,7 @@ void HomeAssistantSendDiscoverConfig() {
   hass_discover_str += eff_list;
 
   #ifdef DEBUG
-  Serial.println(hass_discover_str);
+  //Serial.println(hass_discover_str);
   //mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), "");
   #endif
 

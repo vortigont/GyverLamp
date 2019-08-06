@@ -144,6 +144,7 @@ void fillNoiseLED() {
   for (int i = 0; i < MAX_DIMENSION; i++) {
     int ioffset = scale * i;
     for (int j = 0; j < MAX_DIMENSION; j++) {
+      yield();
       int joffset = scale * j;
 
       uint8_t data = inoise8(x + ioffset, y + joffset, z);
@@ -168,6 +169,7 @@ void fillNoiseLED() {
 
   for (int i = 0; i < WIDTH; i++) {
     for (int j = 0; j < HEIGHT; j++) {
+      yield();
       uint8_t index = noise[j][i];
       uint8_t bri =   noise[i][j];
       // if this palette is a 'loop', add a slowly-changing base value
@@ -192,6 +194,7 @@ void fillnoise8() {
   for (int i = 0; i < MAX_DIMENSION; i++) {
     int ioffset = scale * i;
     for (int j = 0; j < MAX_DIMENSION; j++) {
+      yield();
       int joffset = scale * j;
       noise[i][j] = inoise8(x + ioffset, y + joffset, z);
     }
