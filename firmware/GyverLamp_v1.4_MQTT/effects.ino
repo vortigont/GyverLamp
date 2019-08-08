@@ -89,7 +89,6 @@ void generateLine() {
 void shiftUp() {
   for (uint8_t y = HEIGHT - 1; y > 0; y--) {
     for (uint8_t x = 0; x < WIDTH; x++) {
-      yield();
       uint8_t newX = x;
       if (x > 15) newX = x - 15;
       if (y > 7) continue;
@@ -113,7 +112,6 @@ void drawFrame(int pcnt) {
   //each row interpolates with the one before it
   for (unsigned char y = HEIGHT - 1; y > 0; y--) {
     for (unsigned char x = 0; x < WIDTH; x++) {
-      yield();
       uint8_t newX = x;
       if (x > 15) newX = x - 15;
       if (y < 8) {

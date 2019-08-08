@@ -78,7 +78,7 @@ void MQTTUpdateState () {
 
    char sRGB[15];
    sprintf(sRGB, "%d,%d,%d", r, g, b);
-   mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB); yield();
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB);
 
 }
 
@@ -235,7 +235,7 @@ void MQTTreconnect() {
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/set").c_str());
 
-            MQTTUpdateState(); yield();
+            MQTTUpdateState();
           
         } else {
 
