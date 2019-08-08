@@ -59,5 +59,5 @@ String getTimeStampString() {
    String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
 
    return "Дата: "+ dayStr + "-" + monthStr + "-" + yearStr + ". " + "Время: " +
-          hoursStr + ":" + minuteStr + ":" + secondStr;
+          hoursStr + ":" + minuteStr;
 }
