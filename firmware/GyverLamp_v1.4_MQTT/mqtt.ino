@@ -201,6 +201,7 @@ void MQTTreconnect() {
 
       if ((millis() - timing > mqtt_timeout) && !mqttclient.connected()) {
         timing = millis();
+        if (!WiFi.isConnected()) WiFi.reconnect();
         Serial.print("Attempting MQTT connection...");
 
         // подключаемся к MQTT серверу

@@ -210,18 +210,26 @@ void setup() {
     char mqtt_server[32] = "";
     char mqtt_user[32] = "DEVS_USER";
     char mqtt_password[32] = "DEVS_PASSWD";
+    char esp_id[32] = "";
+    sprintf(esp_id, "<br><p> Chip ID: %s </p>", clientId.c_str());
     
     WiFiManager wifiManager;
-    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 40);
-    WiFiManagerParameter custom_mqtt_username("user", "mqtt user", mqtt_user, 10);
-    WiFiManagerParameter custom_mqtt_password("password", "mqtt password", mqtt_password, 10);
+
+    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 30);
+    WiFiManagerParameter custom_mqtt_username("user", "mqtt user", mqtt_user, 30);
+    WiFiManagerParameter custom_mqtt_password("password", "mqtt_password", mqtt_password, 30);
+    WiFiManagerParameter custom_text_1("<br>MQTT configuration:");
+    WiFiManagerParameter custom_text_2(esp_id);
     
     wifiManager.setSaveConfigCallback(saveConfigCallback);
     wifiManager.setDebugOutput(false);
+    wifiManager.setConfigPortalTimeout(180);
 
+    wifiManager.addParameter(&custom_text_1);
     wifiManager.addParameter(&custom_mqtt_server);
     wifiManager.addParameter(&custom_mqtt_username);
     wifiManager.addParameter(&custom_mqtt_password);
+    wifiManager.addParameter(&custom_text_2);
 
     if (!wifiManager.autoConnect()) {
       if (!wifiManager.startConfigPortal()) {
@@ -229,11 +237,11 @@ void setup() {
       }      
     }
 
-    strcpy(mqtt_server, custom_mqtt_server.getValue());
-    strcpy(mqtt_user, custom_mqtt_username.getValue());
-    strcpy(mqtt_password, custom_mqtt_password.getValue());
-
     if (shouldSaveConfig) {
+
+      strcpy(mqtt_server, custom_mqtt_server.getValue());
+      strcpy(mqtt_user, custom_mqtt_username.getValue());
+      strcpy(mqtt_password, custom_mqtt_password.getValue());
       
       writeMQTTConfig(mqtt_server, mqtt_user,mqtt_password);
       Serial.println("MQTT configuration written");
@@ -245,11 +253,7 @@ void setup() {
     Serial.print(2*(WiFi.RSSI()+100));
     Serial.println("%");
 
-    #ifdef DEBUG
-    Serial.print("onChip memory size: ");
-    Serial.print(ESP.getFlashChipSize()/1024/8);
-    Serial.println("Kb");
-    
+    #ifdef DEBUG    
     Serial.print("Free Heap size: ");
     Serial.print(ESP.getFreeHeap()/1024);
     Serial.println("Kb");
