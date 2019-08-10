@@ -164,19 +164,20 @@ struct MQTTconfig {
   char HOST[32];
   char USER[32];
   char PASSWD[32];
+  char PORT[10];
 };
 
 bool shouldSaveConfig = false;
-char mqtt_server[32] = "";
-char mqtt_user[32] = "DEVS_USER";
-char mqtt_password[32] = "DEVS_PASSWD";
-char esp_id[32] = "";
 
 void saveConfigCallback () {
   Serial.println("should save config");
   shouldSaveConfig = true;
 }
 
+char mqtt_password[32] = "DEVS_PASSWD";
+char mqtt_server[32] = "";
+char mqtt_user[32] = "DEVS_USER";
+char mqtt_port[10] = "1883";
 
 void setup() {
 
@@ -212,6 +213,8 @@ void setup() {
 
   } else {                // подключаемся к роутеру
 
+    char esp_id[32] = "";
+
     Serial.print("WiFi manager...");
     sprintf(esp_id, "<br><p> Chip ID: %s </p>", clientId.c_str());
     
@@ -220,6 +223,7 @@ void setup() {
     WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 32);
     WiFiManagerParameter custom_mqtt_username("user", "mqtt user", mqtt_user, 32);
     WiFiManagerParameter custom_mqtt_password("password", "mqtt_password", mqtt_password, 32);
+    WiFiManagerParameter custom_mqtt_port("port", "mqtt port", mqtt_port, 10);
     WiFiManagerParameter custom_text_1("<br>MQTT configuration:");
     WiFiManagerParameter custom_text_2(esp_id);
     
@@ -231,6 +235,7 @@ void setup() {
     wifiManager.addParameter(&custom_mqtt_server);
     wifiManager.addParameter(&custom_mqtt_username);
     wifiManager.addParameter(&custom_mqtt_password);
+    wifiManager.addParameter(&custom_mqtt_port);
     wifiManager.addParameter(&custom_text_2);
 
     if (!wifiManager.autoConnect()) {
@@ -244,8 +249,9 @@ void setup() {
       strcpy(mqtt_server, custom_mqtt_server.getValue());
       strcpy(mqtt_user, custom_mqtt_username.getValue());
       strcpy(mqtt_password, custom_mqtt_password.getValue());
+      strcpy(mqtt_port, custom_mqtt_port.getValue());
       
-      writeMQTTConfig(mqtt_server, mqtt_user,mqtt_password);
+      writeMQTTConfig(mqtt_server, mqtt_user, mqtt_password, mqtt_port);
       Serial.println("MQTT configuration written");
       delay(100);
     };
