@@ -80,6 +80,8 @@ void MQTTUpdateState () {
    sprintf(sRGB, "%d,%d,%d", r, g, b);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB);
 
+   mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
+
 }
 
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {
@@ -135,6 +137,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
       MQTTUpdateState();
+      
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/rgb/set") {
@@ -236,6 +239,8 @@ void MQTTreconnect() {
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/set").c_str());
 
+            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/state").c_str());
+
             MQTTUpdateState();
           
         } else {
@@ -261,21 +266,25 @@ void HomeAssistantSendDiscoverConfig() {
 
   DynamicJsonDocument hass_discover(1024);
   
+  hass_discover["~"] = "homeassistant/light/"+clientId;
   hass_discover["name"] = "Gyver Lamp "+ clientId; // name
   hass_discover["uniq_id"] = String(ESP.getChipId(), HEX); // unique_id
+  hass_discover["avty_t"] = "~/state";         // availability_topic
+  hass_discover["pl_avail"] = "online";        // payload_available
+  hass_discover["pl_not_avail"] = "offline";   // payload_not_available
 
-  hass_discover["bri_cmd_t"] = "homeassistant/light/"+clientId+"/brightness/set";     // brightness_command_topic
-  hass_discover["bri_stat_t"] = "homeassistant/light/"+clientId+"/brightness/status"; // brightness_state_topic
+  hass_discover["bri_cmd_t"] = "~/brightness/set";     // brightness_command_topic
+  hass_discover["bri_stat_t"] = "~/brightness/status"; // brightness_state_topic
   hass_discover["bri_scl"] = 255;
 
-  hass_discover["cmd_t"] = "homeassistant/light/"+clientId+"/switch"; // command_topic
-  hass_discover["stat_t"] = "homeassistant/light/"+clientId+"/status"; // state_topic
+  hass_discover["cmd_t"] = "~/switch"; // command_topic
+  hass_discover["stat_t"] = "~/status"; // state_topic
   
-  hass_discover["fx_cmd_t"] = "homeassistant/light/"+clientId+"/effect/set";     // effect_command_topic
-  hass_discover["fx_stat_t"] = "homeassistant/light/"+clientId+"/effect/status"; // effect_state_topic
+  hass_discover["fx_cmd_t"] = "~/effect/set";     // effect_command_topic
+  hass_discover["fx_stat_t"] = "~/effect/status"; // effect_state_topic
 
-  hass_discover["rgb_cmd_t"] = "homeassistant/light/"+clientId+"/rgb/set";     // rgb_command_topic
-  hass_discover["rgb_stat_t"] = "homeassistant/light/"+clientId+"/rgb/status"; // rgb_state_topic
+  hass_discover["rgb_cmd_t"] = "~/rgb/set";     // rgb_command_topic
+  hass_discover["rgb_stat_t"] = "~/rgb/status"; // rgb_state_topic
 
   String hass_discover_str;
   serializeJson(hass_discover, hass_discover_str);

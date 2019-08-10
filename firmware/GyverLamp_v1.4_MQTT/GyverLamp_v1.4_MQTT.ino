@@ -1,3 +1,4 @@
+
 /*
   Скетч к проекту "Многофункциональный RGB светильник"
   Страница проекта (схемы, описания): https://alexgyver.ru/GyverLamp/
@@ -157,7 +158,7 @@ String clientId = "ESP-"+String(ESP.getChipId(), HEX);
 //String clientId = "ESP-8266";
 
 bool USE_MQTT = true; // используем  MQTT?
-bool _BTN_CONNECTED = true; 
+bool _BTN_CONNECTED = true;
 
 struct MQTTconfig {
   char HOST[32];
@@ -166,11 +167,16 @@ struct MQTTconfig {
 };
 
 bool shouldSaveConfig = false;
+char mqtt_server[32] = "";
+char mqtt_user[32] = "DEVS_USER";
+char mqtt_password[32] = "DEVS_PASSWD";
+char esp_id[32] = "";
 
 void saveConfigCallback () {
   Serial.println("should save config");
   shouldSaveConfig = true;
 }
+
 
 void setup() {
 
@@ -205,19 +211,15 @@ void setup() {
     USE_MQTT = false;
 
   } else {                // подключаемся к роутеру
-    Serial.print("WiFi manager...");
 
-    char mqtt_server[32] = "";
-    char mqtt_user[32] = "DEVS_USER";
-    char mqtt_password[32] = "DEVS_PASSWD";
-    char esp_id[32] = "";
+    Serial.print("WiFi manager...");
     sprintf(esp_id, "<br><p> Chip ID: %s </p>", clientId.c_str());
     
     WiFiManager wifiManager;
 
-    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 30);
-    WiFiManagerParameter custom_mqtt_username("user", "mqtt user", mqtt_user, 30);
-    WiFiManagerParameter custom_mqtt_password("password", "mqtt_password", mqtt_password, 30);
+    WiFiManagerParameter custom_mqtt_server("server", "mqtt server", mqtt_server, 32);
+    WiFiManagerParameter custom_mqtt_username("user", "mqtt user", mqtt_user, 32);
+    WiFiManagerParameter custom_mqtt_password("password", "mqtt_password", mqtt_password, 32);
     WiFiManagerParameter custom_text_1("<br>MQTT configuration:");
     WiFiManagerParameter custom_text_2(esp_id);
     
@@ -245,6 +247,7 @@ void setup() {
       
       writeMQTTConfig(mqtt_server, mqtt_user,mqtt_password);
       Serial.println("MQTT configuration written");
+      delay(100);
     };
 
     Serial.print("connected! IP address: ");
@@ -279,7 +282,7 @@ void setup() {
     
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       effectsTick();
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+      Serial.printf("Progress: %u%%\n\r", (progress / (total / 100)));
     });
     
     ArduinoOTA.onError([](ota_error_t error) {
