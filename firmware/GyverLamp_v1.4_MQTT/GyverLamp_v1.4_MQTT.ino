@@ -65,6 +65,7 @@ byte IP_AP[] = {192, 168, 4, 100};   // статический IP точки д�
 #define AP_SSID "GyverLamp"
 #define AP_PASS "12345678"
 #define AP_PORT 8888
+//#define WEBAUTH           // раскоментировать для базавой аутентификации на веб интерфейсе. Логин и пароль - значение переменной clientId
 
 // ============= ДЛЯ РАЗРАБОТЧИКОВ =============
 #define LED_PIN 2             // пин ленты
@@ -178,6 +179,7 @@ char mqtt_password[32] = "DEVS_PASSWD";
 char mqtt_server[32] = "";
 char mqtt_user[32] = "DEVS_USER";
 char mqtt_port[10] = "1883";
+byte mac[6];
 
 void setup() {
 
@@ -261,6 +263,10 @@ void setup() {
     Serial.print(". Signal strength: ");
     Serial.print(2*(WiFi.RSSI()+100));
     Serial.println("%");
+
+    Serial.println();
+    Serial.print("MAC: ");
+    Serial.println(WiFi.macAddress());    
 
     #ifdef DEBUG    
     Serial.print("Free Heap size: ");
@@ -358,7 +364,7 @@ void setup() {
 
   MQTTconfig MQTTConfig = readMQTTConfig();
   
-  if ((String(MQTTConfig.HOST) == "none") || (ESP_MODE == 0)) {
+  if ((String(MQTTConfig.HOST) == "none") || (ESP_MODE == 0) || String(MQTTConfig.HOST).length() == 0) {
 
     USE_MQTT = false;
     Serial.println("Использование MQTT сервера отключено.");

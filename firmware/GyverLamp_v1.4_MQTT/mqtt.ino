@@ -101,10 +101,9 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   #endif
 
   if (String(topic) == "homeassistant/light/"+clientId+"/switch") {
-      #ifdef DEBUG
+
       Serial.print("Command arrived: ");
       Serial.println(Payload);
-      #endif
 
       ONflag = (Payload == "ON") ? true : false;      
       changePower();
@@ -114,9 +113,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/brightness/set") {
-      #ifdef DEBUG
+
       Serial.print("Command arrived: brightness "); Serial.println(Payload);
-      #endif
 
       modes[currentMode].brightness = Payload.toInt();
       FastLED.setBrightness(modes[currentMode].brightness);
@@ -127,9 +125,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/set") {
-      #ifdef DEBUG
+
       Serial.print("Command arrived: effect set to "); Serial.println(Payload);
-      #endif
 
       currentMode = Get_EFFIDX(Payload);
       saveEEPROM();
@@ -143,9 +140,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/rgb/set") {
-      #ifdef DEBUG
+
       Serial.print("Command arrived: rgb "); Serial.println(Payload);
-      #endif
       
       r = getValue(Payload, ',', 0).toInt();
       g = getValue(Payload, ',', 1).toInt();
@@ -161,9 +157,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/speed/set") {
-      #ifdef DEBUG
+
       Serial.print("Command arrived: speed "); Serial.println(Payload);
-      #endif
 
       modes[currentMode].speed = Payload.toInt();
       saveEEPROM();
@@ -175,9 +170,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/scale/set") {
-      #ifdef DEBUG
+
       Serial.print("Command arrived: scale "); Serial.println(Payload);
-      #endif
 
       if (currentMode == 17 && Payload.toInt() > 100) Payload = "100";
       

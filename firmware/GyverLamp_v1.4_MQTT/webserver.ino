@@ -7,35 +7,30 @@ void webserver() {
     http->onNotFound(routeNotFound);
 
     /** главная */
-    http->on("/", routeHome); 
+    http->on("/", routeHome);
+    
     /** прием конфигурации */
     http->on("/setconfig", routeSetConfig); 
+    
     /** получить текущие настройки/конфигурацию */
     http->on("/getconfig", routeGetConfig); 
   
-  /** страница настройка таймера вкл/выкл */
-//  http->on("/timer", routeTimer); 
-  /** прием конфигурации таймера вкл/выкл */
-//  http->on("/settimerconfig", routeGetTimerConfig); 
-  /** получить текущие настройки/конфигурацию таймера вкл/выкл */
-//  http->on("/gettimerconfig", routeSetTimerConfig); 
-  
     /** страница настройка будильника */
     http->on("/alarm", routeAlarm); 
+    
     /** прием конфигурации будильника */
     http->on("/setalarmconfig", routeSetAlarmConfig); 
+    
     /** получить текущие настройки/конфигурацию будильника */
-    http->on("/getalarmconfig", routeGetAlarmConfig); 
-  
+    http->on("/getalarmconfig", routeGetAlarmConfig);
+
     http->begin();
-
-    Serial.print("Запущен веб сервер по адресу: http://"); 
-    Serial.print(clientId);
-    Serial.println(".local/"); 
-
+    
+    Serial.printf("Запущен веб сервер по адресу: http://%s.local/\r\n", clientId.c_str());
+    
   } else {
     
-    Serial.println("Ошибка создания веб сервера. ");
+    Serial.println("Ошибка создания веб сервера. \r\n");
   }
   
 }
@@ -43,7 +38,14 @@ void webserver() {
 /**
  * шаблон/отправщик страницы
  */
-void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200){ 
+void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200) {
+
+  #ifdef WEBAUTH
+  if (!http->authenticate(clientId.c_str(), clientId.c_str())) {
+      return http->requestAuthentication();
+  }
+  #endif
+   
   String html;
   
   html = "<html>";
@@ -168,15 +170,24 @@ void routeNotFound() {
  * отправка текущей конфигурации 
  * + отправка JSON(обязательно должен завершаться запятой)
  */
-void routeGetConfig(){
+void routeGetConfig() {
+
+  #ifdef WEBAUTH
+  if (!http->authenticate(clientId.c_str(), clientId.c_str())) {
+      return http->requestAuthentication();
+  }
+  #endif
+
   String out;
 
   out += "{";
-  out += "\"currentMode\":\"" + String(currentMode) + "\",";
-  out += "\"brightness\":\"" + String(modes[currentMode].brightness) + "\",";
-  out += "\"speed\":\"" + String(modes[currentMode].speed) + "\",";
-  out += "\"scale\":\"" + String(modes[currentMode].scale) + "\",";
-  out += "\"on\":\"" + String(ONflag) + "\"";
+  out += "\"status\": \"ok\",";
+  out += "\"value\": " + String(modes[currentMode].brightness) + ",";
+  out += "\"currentMode\": " + String(currentMode) + ",";
+  out += "\"brightness\": " + String(modes[currentMode].brightness) + ",";
+  out += "\"speed\": " + String(modes[currentMode].speed) + ",";
+  out += "\"scale\": " + String(modes[currentMode].scale) + ",";
+  out += "\"on\": " + String(ONflag);
   out += "}";
   
   http->send(200, "text/json", out);
@@ -185,7 +196,13 @@ void routeGetConfig(){
 /**
  * изменение/применение новой конфигурации
  */
-void routeSetConfig(){
+void routeSetConfig() {
+
+  #ifdef WEBAUTH
+  if (!http->authenticate(clientId.c_str(), clientId.c_str())) {
+      return http->requestAuthentication();
+  }
+  #endif
   
   if (http->hasArg("on")) {
     
@@ -229,8 +246,12 @@ void routeSetConfig(){
   }
   
   if(http->hasArg("brightness")){
+    ONflag = true;    
     modes[currentMode].brightness = http->arg("brightness").toInt();
+    changePower();
     FastLED.setBrightness(modes[currentMode].brightness);
+
+    sendCurrent();
     settChanged = true;
     eepromTimer = millis();
 
@@ -303,7 +324,14 @@ void routeSetAlarmConfig(){
   
 }
 
-void routeGetAlarmConfig(){
+void routeGetAlarmConfig() {
+
+  #ifdef WEBAUTH
+  if (!http->authenticate(clientId.c_str(), clientId.c_str())) {
+      return http->requestAuthentication();
+  }
+  #endif
+  
   String out = "{";
   int _time;
     
@@ -328,6 +356,7 @@ void routeGetAlarmConfig(){
  * главная страница
  */
 void routeHome(){
+  
   String out;
   
   out = "<form>";
