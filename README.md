@@ -303,11 +303,11 @@ input_number:
 
 ## Настройка интеграции с Node-Red
 
-Спасибо @cacherocks за проделанную работу. Картинка с флоу для лампы:
+Спасибо [@cacherocks](https://github.com/cacherocks) за проделанную работу. Картинка с флоу для лампы:
 ![LampFlow](https://github.com/Whilser/GyverLamp/blob/master/Node-Red/glamp_nr.png)
 ![LampFlow](https://github.com/Whilser/GyverLamp/blob/master/Node-Red/gleff_nr.png)
 
-Флоу для импорта в нодред находятся в папке Node-Red: https://github.com/Whilser/GyverLamp/tree/master/Node-Red
+Флоу для импорта в нодред находятся в папке Node-Red: https://github.com/Whilser/GyverLamp/tree/master/Node-Red.
 Дополнительно необходимо установить: node-red-contrib-homekit-bridged для добавления в Homekit и node-red-contrib-color-convert для конвертации RGB в HSV и обратно. 
 
 * [x] в mqtt нодах надо поменять ESP-267059 на свой ID
