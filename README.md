@@ -8,9 +8,10 @@
 * [Настройка интеграции с HomeAssistant](#chapter-5)
 * [Настройка интеграции с Home Bridge и Apple Home Kit](#chapter-6)
 * [Настройка интеграции с Яндекс Алисой](#chapter-7)
-* [Управляющие топики MQTT (для интеграции с системами домашней автоматизации)](#chapter-8)
-* [FAQ](#chapter-9)
-* [Полезная информация](#chapter-10)
+* [Настройка интеграции с Node-Red](#chapter-8)
+* [Управляющие топики MQTT (для интеграции с системами домашней автоматизации)](#chapter-9)
+* [FAQ](#chapter-10)
+* [Полезная информация](#chapter-11)
 [![AlexGyver YouTube](http://alexgyver.ru/git_banner.jpg)](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
 
 <a id="chapter-0"></a>
@@ -297,7 +298,23 @@ input_number:
 * [x] Возможность выбирать цвет свечения лампы из RGB палитры
 * [x] OTA обновление - второй раз не нужно подключать через USB для прошивки, можно обновить прошивку через сетевой порт
 
+
 <a id="chapter-8"></a>
+
+## Настройка интеграции с Node-Red
+
+Спасибо @cacherocks за проделанную работу. Картинка с флоу для лампы:
+![LampFlow](https://github.com/Whilser/GyverLamp/blob/master/Node-Red/glamp_nr.png)
+![LampFlow](https://github.com/Whilser/GyverLamp/blob/master/Node-Red/gleff_nr.png)
+
+Флоу для импорта в нодред находятся в папке Node-Red: https://github.com/Whilser/GyverLamp/tree/master/Node-Red
+Дополнительно необходимо установить: node-red-contrib-homekit-bridged для добавления в Homekit и node-red-contrib-color-convert для конвертации RGB в HSV и обратно. 
+
+* [x] в mqtt нодах надо поменять ESP-267059 на свой ID
+* [x] всех homekit нодах надо поменять bridge на свой
+* [x] в нодах также необходимо заменить ESP-267059 на свой ID
+
+<a id="chapter-9"></a>
 ### Управляющие топики MQTT (для интеграции с прочими системами домашней автоматизации)
 
 Получение статуса лампы:
@@ -345,7 +362,7 @@ input_number:
 
 ```
 
-<a id="chapter-9"></a>
+<a id="chapter-10"></a>
 
 ## FAQ
 ### Основные вопросы
@@ -366,7 +383,7 @@ input_number:
 
 ### Вопросы по этому проекту
 
-<a id="chapter-10"></a>
+<a id="chapter-11"></a>
 ## Полезная информация
 * [Мой сайт](http://alexgyver.ru/)
 * [Основной YouTube канал](https://www.youtube.com/channel/UCgtAOyEQdAyjvm9ATCi_Aig?sub_confirmation=1)
