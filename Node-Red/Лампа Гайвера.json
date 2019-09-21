@@ -1,0 +1,283 @@
+[
+    {
+        "id": "35c26c57.de9424",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": true,
+        "bridge": "f636286a.4cd8c8",
+        "parentService": "",
+        "name": "Лампа Гайвера",
+        "serviceName": "Lightbulb",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{\n    \"Hue\":true,\n    \"Saturation\":true,\n    \"Brightness\":true\n}",
+        "x": 395,
+        "y": 2520,
+        "wires": [
+            [
+                "812c70a3.2bc02",
+                "a7abc68e.512968"
+            ]
+        ]
+    },
+    {
+        "id": "359bc9ed.ba6226",
+        "type": "comment",
+        "z": "4b68a1cd.d6253",
+        "name": "Лампа Гайвера (Lightbulb)",
+        "info": "",
+        "x": 125,
+        "y": 2430,
+        "wires": []
+    },
+    {
+        "id": "8e651512.0b5ce8",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "To HK",
+        "func": "if(msg.topic == \"homeassistant/light/ESP-267059/brightness/status\"){\n    var val = msg.payload;\n    msg.payload = {\n        \"Brightness\":val\n    }\n    return [msg];\n}\nif(msg.topic == \"homeassistant/light/ESP-267059/status\"){\n    if(msg.payload == \"ON\"){\n        msg.payload = {\n            \"On\":true\n        }\n        return [msg];\n    }\n    if(msg.payload == \"OFF\"){\n        msg.payload = {\n            \"On\":false\n        }\n        return [msg];\n    }\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 215,
+        "y": 2520,
+        "wires": [
+            [
+                "35c26c57.de9424"
+            ]
+        ]
+    },
+    {
+        "id": "1c13450f.9a55ab",
+        "type": "mqtt in",
+        "z": "4b68a1cd.d6253",
+        "name": "HUE/SAT",
+        "topic": "homeassistant/light/ESP-267059/rgb/status",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "a12eec9c.34999",
+        "x": 75,
+        "y": 2475,
+        "wires": [
+            [
+                "64d0d052.26e"
+            ]
+        ]
+    },
+    {
+        "id": "a3528d55.36777",
+        "type": "mqtt in",
+        "z": "4b68a1cd.d6253",
+        "name": "BRI",
+        "topic": "homeassistant/light/ESP-267059/brightness/status",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "a12eec9c.34999",
+        "x": 65,
+        "y": 2520,
+        "wires": [
+            [
+                "8e651512.0b5ce8"
+            ]
+        ]
+    },
+    {
+        "id": "7328e399.5fbfac",
+        "type": "mqtt in",
+        "z": "4b68a1cd.d6253",
+        "name": "On/Off",
+        "topic": "homeassistant/light/ESP-267059/status",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "a12eec9c.34999",
+        "x": 65,
+        "y": 2565,
+        "wires": [
+            [
+                "8e651512.0b5ce8"
+            ]
+        ]
+    },
+    {
+        "id": "812c70a3.2bc02",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "To MQTT",
+        "func": "if(msg.hap.context !== undefined){\n    if(msg.payload.On === true){\n        return [null,{\"payload\":\"ON\"}];\n    }\n    if(msg.payload.On === false){\n        return [null,{\"payload\":\"OFF\"}];\n    }\n    if(msg.payload.Brightness !== undefined){\n        var bright = msg.payload.Brightness;\n        return [{\"payload\":bright},null];\n    }\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 690,
+        "y": 2520,
+        "wires": [
+            [
+                "de7e7d5.b1ddc8"
+            ],
+            [
+                "8d71e903.e1ac18"
+            ]
+        ]
+    },
+    {
+        "id": "feeae019.dd292",
+        "type": "mqtt out",
+        "z": "4b68a1cd.d6253",
+        "name": "HUE/SAT",
+        "topic": "homeassistant/light/ESP-267059/rgb/set",
+        "qos": "1",
+        "retain": "false",
+        "broker": "a12eec9c.34999",
+        "x": 855,
+        "y": 2565,
+        "wires": []
+    },
+    {
+        "id": "de7e7d5.b1ddc8",
+        "type": "mqtt out",
+        "z": "4b68a1cd.d6253",
+        "name": "BRI",
+        "topic": "homeassistant/light/ESP-267059/brightness/set",
+        "qos": "1",
+        "retain": "false",
+        "broker": "a12eec9c.34999",
+        "x": 845,
+        "y": 2475,
+        "wires": []
+    },
+    {
+        "id": "8d71e903.e1ac18",
+        "type": "mqtt out",
+        "z": "4b68a1cd.d6253",
+        "name": "On/Off",
+        "topic": "homeassistant/light/ESP-267059/switch",
+        "qos": "1",
+        "retain": "false",
+        "broker": "a12eec9c.34999",
+        "x": 845,
+        "y": 2520,
+        "wires": []
+    },
+    {
+        "id": "a7abc68e.512968",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Output",
+        "func": "var Hue = flow.get('Hue')||0;\nvar Saturation = flow.get('Saturation')||0;\nvar Brightness = flow.get('Brightness')||100;\n\nif(msg.payload.Hue){\n    Hue = msg.payload.Hue;\n    flow.set('Hue',Hue);\n}\nif(msg.payload.Saturation){\n    Saturation = msg.payload.Saturation;\n    flow.set('Saturation',Saturation);\n}\nif (msg.hap.context !== undefined) {\n    if(msg.payload.On === true){\n        return [{\"payload\":[Hue,Saturation,Brightness]}]\n    }\n    if(msg.payload.On === false){\n        return [{\"payload\":[0,0,0]}]\n    }\n    else{\n        return [{\"payload\":[Hue,Saturation,Brightness]}]\n    }\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 545,
+        "y": 2565,
+        "wires": [
+            [
+                "ee011264.677c1"
+            ]
+        ]
+    },
+    {
+        "id": "ee011264.677c1",
+        "type": "color-convert",
+        "z": "4b68a1cd.d6253",
+        "input": "hsv",
+        "output": "rgb",
+        "outputType": "string",
+        "scaleInput": false,
+        "x": 700,
+        "y": 2565,
+        "wires": [
+            [
+                "feeae019.dd292"
+            ]
+        ]
+    },
+    {
+        "id": "8a21a8f0.e1c128",
+        "type": "color-convert",
+        "z": "4b68a1cd.d6253",
+        "input": "rgb",
+        "output": "hsv",
+        "outputType": "array",
+        "x": 385,
+        "y": 2475,
+        "wires": [
+            [
+                "6999c218.6b78bc"
+            ]
+        ]
+    },
+    {
+        "id": "6999c218.6b78bc",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Format",
+        "func": "var outmsg={};\nvar Hue = flow.get('Hue')||0;\nvar Saturation = flow.get('Saturation')||0;\n\n//if(msg.payload[0]===0 && msg.payload[1]===0 && msg.payload[2]===0){\n//    outmsg.payload={\"On\":false};\n//} else\n{\n    Hue = msg.payload[0];\n    flow.set('Hue',Hue);\n    Saturation = msg.payload[1];\n    flow.set('Saturation',Saturation);\n    outmsg.payload={\n//        \"On\":true,\n        \"Hue\":Hue,\n        \"Saturation\":Saturation\n    }\n}\nreturn [outmsg];\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 540,
+        "y": 2475,
+        "wires": [
+            [
+                "35c26c57.de9424"
+            ]
+        ]
+    },
+    {
+        "id": "64d0d052.26e",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "To HK",
+        "func": "msg.payload = msg.payload.split(\",\");\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 215,
+        "y": 2475,
+        "wires": [
+            [
+                "8a21a8f0.e1c128"
+            ]
+        ]
+    },
+    {
+        "id": "f636286a.4cd8c8",
+        "type": "homekit-bridge",
+        "z": "",
+        "bridgeName": "NR Bridge",
+        "pinCode": "111-11-111",
+        "port": "",
+        "allowInsecureRequest": false,
+        "manufacturer": "Synology DS918 Plus",
+        "model": "Synology DS918 Plus",
+        "serialNo": "Synology DS918 Plus",
+        "customMdnsConfig": false,
+        "mdnsMulticast": true,
+        "mdnsInterface": "",
+        "mdnsPort": "",
+        "mdnsIp": "",
+        "mdnsTtl": "",
+        "mdnsLoopback": true,
+        "mdnsReuseAddr": true
+    },
+    {
+        "id": "a12eec9c.34999",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "local",
+        "broker": "127.0.0.1",
+        "port": "1883",
+        "clientid": "NodeRed",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": ""
+    }
+]

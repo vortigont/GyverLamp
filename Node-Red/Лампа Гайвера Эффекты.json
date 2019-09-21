@@ -1,0 +1,881 @@
+[
+    {
+        "id": "6fd42675.b93598",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": true,
+        "bridge": "f636286a.4cd8c8",
+        "parentService": "",
+        "name": "Лампа Гайвера Эффекты",
+        "serviceName": "Television",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{\n\"ActiveIdentifier\":1,\n\"Characteristic.InputSourceType\": \"InputSourceType\"\n}",
+        "x": 435,
+        "y": 2715,
+        "wires": [
+            [
+                "7f258d10.a486f4"
+            ]
+        ]
+    },
+    {
+        "id": "9ca46a5.ecbd598",
+        "type": "mqtt in",
+        "z": "4b68a1cd.d6253",
+        "name": "Effect",
+        "topic": "homeassistant/light/ESP-267059/effect/status",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "a12eec9c.34999",
+        "x": 65,
+        "y": 2670,
+        "wires": [
+            [
+                "6a4739db.f0b2f8"
+            ]
+        ]
+    },
+    {
+        "id": "c49cf05a.92338",
+        "type": "mqtt in",
+        "z": "4b68a1cd.d6253",
+        "name": "On/Off",
+        "topic": "homeassistant/light/ESP-267059/status",
+        "qos": "1",
+        "datatype": "auto",
+        "broker": "a12eec9c.34999",
+        "x": 65,
+        "y": 2715,
+        "wires": [
+            [
+                "241d430b.21219c"
+            ]
+        ]
+    },
+    {
+        "id": "241d430b.21219c",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "To homekit",
+        "func": "if(msg.topic == \"homeassistant/light/ESP-267059/status\"){\n    if(msg.payload == \"ON\"){\n        msg.payload = {\n            \"Active\":1\n        }\n        return [msg];\n    }\n    if(msg.payload == \"OFF\"){\n        msg.payload = {\n            \"Active\":0\n        }\n        return [msg];\n    }\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 205,
+        "y": 2715,
+        "wires": [
+            [
+                "6fd42675.b93598"
+            ]
+        ]
+    },
+    {
+        "id": "bdb6b547.f49468",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 1,\n \"ConfiguredName\": \"Конфетти\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 2760,
+        "wires": [
+            [
+                "2618d1c0.da920e"
+            ]
+        ]
+    },
+    {
+        "id": "2618d1c0.da920e",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Конфетти",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 2760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4efbdd2c.64dc04",
+        "type": "inject",
+        "z": "4b68a1cd.d6253",
+        "name": "",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "1",
+        "x": 115,
+        "y": 2760,
+        "wires": [
+            [
+                "bdb6b547.f49468",
+                "92960b47.ce5298",
+                "46867b05.a75584",
+                "2506d9e3.088096",
+                "4c966e5e.e1647",
+                "b7be29bc.a59788",
+                "e803be26.6f053",
+                "b143eaa.47f9618",
+                "188775f8.08826a",
+                "5d619f27.f964a",
+                "e45bd511.241688",
+                "ca18b3ee.22509",
+                "49860101.b29a6",
+                "10dfa5db.2dc06a",
+                "f93068a8.9062e8",
+                "38bcc1db.d2559e",
+                "eecf0026.f7866"
+            ]
+        ]
+    },
+    {
+        "id": "a19c0ae.5c746f8",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Огонь",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 455,
+        "y": 2805,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b64049a9.e39bb8",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Радуга верт.",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 2850,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "26913ba.765cfc4",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Радуга гориз.",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 485,
+        "y": 2895,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9508ee42.aed39",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Смена цвета",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 2940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3499fd48.bbfc52",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Безумие 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 2985,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dda189aa.ad1868",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Облака 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 3030,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d1389a5f.a2ae78",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Лава 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 465,
+        "y": 3075,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "71e48afb.895a54",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Плазма 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 3120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "92960b47.ce5298",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 2,\n \"ConfiguredName\": \"Огонь\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 2805,
+        "wires": [
+            [
+                "a19c0ae.5c746f8"
+            ]
+        ]
+    },
+    {
+        "id": "46867b05.a75584",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 3,\n \"ConfiguredName\": \"Радуга верт.\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 2850,
+        "wires": [
+            [
+                "b64049a9.e39bb8"
+            ]
+        ]
+    },
+    {
+        "id": "2506d9e3.088096",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 4,\n \"ConfiguredName\": \"Радуга гориз.\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 2895,
+        "wires": [
+            [
+                "26913ba.765cfc4"
+            ]
+        ]
+    },
+    {
+        "id": "4c966e5e.e1647",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 5,\n \"ConfiguredName\": \"Смена цвета\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 2940,
+        "wires": [
+            [
+                "9508ee42.aed39"
+            ]
+        ]
+    },
+    {
+        "id": "b7be29bc.a59788",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 6,\n \"ConfiguredName\": \"Безумие 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 2985,
+        "wires": [
+            [
+                "3499fd48.bbfc52"
+            ]
+        ]
+    },
+    {
+        "id": "e803be26.6f053",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 7,\n \"ConfiguredName\": \"Облака 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3030,
+        "wires": [
+            [
+                "dda189aa.ad1868"
+            ]
+        ]
+    },
+    {
+        "id": "b143eaa.47f9618",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 8,\n \"ConfiguredName\": \"Лава 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3075,
+        "wires": [
+            [
+                "d1389a5f.a2ae78"
+            ]
+        ]
+    },
+    {
+        "id": "188775f8.08826a",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 9,\n \"ConfiguredName\": \"Плазма 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3120,
+        "wires": [
+            [
+                "71e48afb.895a54"
+            ]
+        ]
+    },
+    {
+        "id": "df6cc107.38a12",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Радуга 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 3165,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5d619f27.f964a",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 10,\n \"ConfiguredName\": \"Радуга 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3165,
+        "wires": [
+            [
+                "df6cc107.38a12"
+            ]
+        ]
+    },
+    {
+        "id": "31be4568.34f65a",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Павлин 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 3210,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e45bd511.241688",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 11,\n \"ConfiguredName\": \"Павлин 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3210,
+        "wires": [
+            [
+                "31be4568.34f65a"
+            ]
+        ]
+    },
+    {
+        "id": "d8b54c1a.c8b7f",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Зебра 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 465,
+        "y": 3255,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ca18b3ee.22509",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 12,\n \"ConfiguredName\": \"Зебра 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3255,
+        "wires": [
+            [
+                "d8b54c1a.c8b7f"
+            ]
+        ]
+    },
+    {
+        "id": "3e0c623.968099e",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Лес 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 465,
+        "y": 3300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "49860101.b29a6",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 13,\n \"ConfiguredName\": \"Лес 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3300,
+        "wires": [
+            [
+                "3e0c623.968099e"
+            ]
+        ]
+    },
+    {
+        "id": "89a28969.038768",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Океан 3D",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 465,
+        "y": 3345,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "10dfa5db.2dc06a",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 14,\n \"ConfiguredName\": \"Океан 3D\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3345,
+        "wires": [
+            [
+                "89a28969.038768"
+            ]
+        ]
+    },
+    {
+        "id": "bdab5249.eeb93",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Снегопад",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 465,
+        "y": 3390,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f93068a8.9062e8",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 15,\n \"ConfiguredName\": \"Снегопад\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3390,
+        "wires": [
+            [
+                "bdab5249.eeb93"
+            ]
+        ]
+    },
+    {
+        "id": "2c094ad1.f89b36",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Матрица",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 465,
+        "y": 3435,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "38bcc1db.d2559e",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 16,\n \"ConfiguredName\": \"Матрица\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3435,
+        "wires": [
+            [
+                "2c094ad1.f89b36"
+            ]
+        ]
+    },
+    {
+        "id": "c50095a3.a52958",
+        "type": "homekit-service",
+        "z": "4b68a1cd.d6253",
+        "isParent": false,
+        "bridge": "",
+        "parentService": "6fd42675.b93598",
+        "name": "Светлячки",
+        "serviceName": "InputSource",
+        "topic": "",
+        "filter": false,
+        "manufacturer": "Default Manufacturer",
+        "model": "Default Model",
+        "serialNo": "Default Serial Number",
+        "characteristicProperties": "{}",
+        "x": 475,
+        "y": 3480,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "eecf0026.f7866",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Configuration",
+        "func": "msg.payload = {\n \"IsConfigured\" : 1,\n \"Identifier\": 17,\n \"ConfiguredName\": \"Светлячки\",\n \"InputSourceType\": 10\n};\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 290,
+        "y": 3480,
+        "wires": [
+            [
+                "c50095a3.a52958"
+            ]
+        ]
+    },
+    {
+        "id": "7f258d10.a486f4",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "To MQTT",
+        "func": "if(msg.hap.context !== undefined){\n\nif(msg.payload.ActiveIdentifier === 1){return [null,{payload: 'Конфетти'}];}\nif(msg.payload.ActiveIdentifier === 2){return [null,{payload: 'Огонь'}];}\nif(msg.payload.ActiveIdentifier === 3){return [null,{payload: 'Радуга верт.'}];}\nif(msg.payload.ActiveIdentifier === 4){return [null,{payload: 'Радуга гориз.'}];}\nif(msg.payload.ActiveIdentifier === 5){return [null,{payload: 'Смена цвета'}];}\nif(msg.payload.ActiveIdentifier === 6){return [null,{payload: 'Безумие 3D'}];}\nif(msg.payload.ActiveIdentifier === 7){return [null,{payload: 'Облака 3D'}];}\nif(msg.payload.ActiveIdentifier === 8){return [null,{payload: 'Лава 3D'}];}\nif(msg.payload.ActiveIdentifier === 9){return [null,{payload: 'Плазма 3D'}];}\nif(msg.payload.ActiveIdentifier === 10){return [null,{payload: 'Радуга 3D'}];}\nif(msg.payload.ActiveIdentifier === 11){return [null,{payload: 'Павлин 3D'}];}\nif(msg.payload.ActiveIdentifier === 12){return [null,{payload: 'Зебра 3D'}];}\nif(msg.payload.ActiveIdentifier === 13){return [null,{payload: 'Лес 3D'}];}\nif(msg.payload.ActiveIdentifier === 14){return [null,{payload: 'Океан 3D'}];}\nif(msg.payload.ActiveIdentifier === 15){return [null,{payload: 'Снегопад'}];}\nif(msg.payload.ActiveIdentifier === 16){return [null,{payload: 'Матрица'}];}\nif(msg.payload.ActiveIdentifier === 17){return [null,{payload: 'Светлячки'}];}\nif(msg.payload.Active === 1){return [{payload: \"ON\"},null];}\nif(msg.payload.Active === 0){return [{payload: \"OFF\"},null];}\n}",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 600,
+        "y": 2670,
+        "wires": [
+            [
+                "771401eb.fa29c"
+            ],
+            [
+                "f533416b.184ff"
+            ]
+        ]
+    },
+    {
+        "id": "771401eb.fa29c",
+        "type": "mqtt out",
+        "z": "4b68a1cd.d6253",
+        "name": "On/Off",
+        "topic": "homeassistant/light/ESP-267059/switch",
+        "qos": "1",
+        "retain": "false",
+        "broker": "a12eec9c.34999",
+        "x": 740,
+        "y": 2670,
+        "wires": []
+    },
+    {
+        "id": "f533416b.184ff",
+        "type": "mqtt out",
+        "z": "4b68a1cd.d6253",
+        "name": "Effect",
+        "topic": "homeassistant/light/ESP-267059/effect/set",
+        "qos": "1",
+        "retain": "false",
+        "broker": "a12eec9c.34999",
+        "x": 740,
+        "y": 2715,
+        "wires": []
+    },
+    {
+        "id": "6a4739db.f0b2f8",
+        "type": "function",
+        "z": "4b68a1cd.d6253",
+        "name": "Effect to HK",
+        "func": "if(msg.payload === 'Конфетти') return {payload: '1'};\nif(msg.payload === 'Огонь') return {payload: '2'};\nif(msg.payload === 'Радуга верт.') return {payload: '3'};\nif(msg.payload === 'Радуга гориз.') return {payload: '4'};\nif(msg.payload === 'Смена цвета') return {payload: '5'};\nif(msg.payload === 'Безумие 3D') return {payload: '6'};\nif(msg.payload === 'Облака 3D') return {payload: '7'};\nif(msg.payload === 'Лава 3D') return {payload: '8'};\nif(msg.payload === 'Плазма 3D') return {payload: '9'};\nif(msg.payload === 'Радуга 3D') return {payload: '10'};\nif(msg.payload === 'Павлин 3D') return {payload: '11'};\nif(msg.payload === 'Зебра 3D') return {payload: '12'};\nif(msg.payload === 'Лес 3D') return {payload: '13'};\nif(msg.payload === 'Океан 3D') return {payload: '14'};\nif(msg.payload === 'Снегопад') return {payload: '15'};\nif(msg.payload === 'Матрица') return {payload: '16'};\nif(msg.payload === 'Светлячки') return {payload: '17'};\n\n\n\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 205,
+        "y": 2670,
+        "wires": [
+            [
+                "a4c6778d.f5fc98"
+            ]
+        ]
+    },
+    {
+        "id": "a4c6778d.f5fc98",
+        "type": "change",
+        "z": "4b68a1cd.d6253",
+        "name": "ActiveIdentifier",
+        "rules": [
+            {
+                "t": "move",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.ActiveIdentifier",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 395,
+        "y": 2670,
+        "wires": [
+            [
+                "6fd42675.b93598"
+            ]
+        ]
+    },
+    {
+        "id": "2de714b.1f62bec",
+        "type": "comment",
+        "z": "4b68a1cd.d6253",
+        "name": "Лампа Гайвера Эффекты (Television)",
+        "info": "",
+        "x": 165,
+        "y": 2625,
+        "wires": []
+    },
+    {
+        "id": "f636286a.4cd8c8",
+        "type": "homekit-bridge",
+        "z": "",
+        "bridgeName": "NR Bridge",
+        "pinCode": "111-11-111",
+        "port": "",
+        "allowInsecureRequest": false,
+        "manufacturer": "Synology DS918 Plus",
+        "model": "Synology DS918 Plus",
+        "serialNo": "Synology DS918 Plus",
+        "customMdnsConfig": false,
+        "mdnsMulticast": true,
+        "mdnsInterface": "",
+        "mdnsPort": "",
+        "mdnsIp": "",
+        "mdnsTtl": "",
+        "mdnsLoopback": true,
+        "mdnsReuseAddr": true
+    },
+    {
+        "id": "a12eec9c.34999",
+        "type": "mqtt-broker",
+        "z": "",
+        "name": "local",
+        "broker": "127.0.0.1",
+        "port": "1883",
+        "clientid": "NodeRed",
+        "usetls": false,
+        "compatmode": true,
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "closeTopic": "",
+        "closePayload": "",
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": ""
+    }
+]
