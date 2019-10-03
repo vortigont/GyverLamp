@@ -41,7 +41,7 @@ void buttonTick() {
   }
 
   if (ONflag && touch.isTriple()) {
-    if (--currentMode < 0) currentMode = 0;
+    if (--currentMode < 0) currentMode = MODE_AMOUNT;
     FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
     settChanged = true;
@@ -49,6 +49,13 @@ void buttonTick() {
     FastLED.clear();
     delay(1);
     MQTTUpdateState();
+  }
+
+  // вывод IP на лампу
+  if (ONflag && touch.hasClicks()) {
+    if (touch.getClicks() == 5) {
+      while(!fillString(WiFi.localIP().toString())) delay(1);
+    }
   }
 
   if (ONflag && touch.isHolded()) {
