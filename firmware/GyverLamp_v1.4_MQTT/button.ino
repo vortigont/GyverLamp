@@ -1,7 +1,11 @@
 boolean brightDirection;
 
 void buttonTick() {
+
   if (!_BTN_CONNECTED) return;
+
+  // Необходимое время для калибровки сенсорной кнопки
+  //if (millis() < 10000) return;
   
   touch.tick();
   if (touch.isSingle()) {

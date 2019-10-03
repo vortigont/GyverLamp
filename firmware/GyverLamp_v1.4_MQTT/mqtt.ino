@@ -202,7 +202,8 @@ void MQTTreconnect() {
 
           timing = millis();
           
-          if (!WiFi.isConnected()) WiFi.reconnect();
+          //if (!WiFi.isConnected()) WiFi.reconnect();
+      
           Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER);
 
           // подключаемся к MQTT серверу
@@ -247,9 +248,13 @@ void MQTTreconnect() {
           mqtt_reconnection_count += 1;
           mqtt_timeout *= 2;
 
-          if (mqtt_reconnection_count >= 10) {
-            mqtt_timeout = 5000;
-            mqtt_reconnection_count = 0;
+          if (mqtt_reconnection_count >= 9) {
+
+            Serial.println("Сan not establish a connection, resetting ESP...");
+            ESP.restart(); //ESP.reset();
+
+            //mqtt_timeout = 5000;
+            //mqtt_reconnection_count = 0;
             
           }
           
