@@ -202,7 +202,7 @@ void MQTTreconnect() {
 
           timing = millis();
           
-          //if (!WiFi.isConnected()) WiFi.reconnect();
+          if (!WiFi.isConnected()) WiFi.reconnect();
       
           Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER);
 
