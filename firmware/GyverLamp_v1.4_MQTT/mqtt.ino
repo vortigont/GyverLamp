@@ -297,6 +297,7 @@ void HomeAssistantSendDiscoverConfig() {
   const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.4 MQTT"})=====";  // device reg
   char dev_reg[256];
 
+  //sprintf(dev_reg, dev_reg_tpl, String("\""+String(ESP.getChipId(), HEX)+"\", \"W"+String(ESP.getChipId(), HEX)+"\"").c_str());
   sprintf(dev_reg, dev_reg_tpl, String(ESP.getChipId(), HEX).c_str());
   hass_discover_str = hass_discover_str.substring(0, hass_discover_str.length() - 1);
 
@@ -309,4 +310,58 @@ void HomeAssistantSendDiscoverConfig() {
   #endif
 
   mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+
+  // уровень wifi сигнала
+  DynamicJsonDocument hass_discover_signal_sensor(1024);
+  String hass_discover_signal_sensor_str;
+
+  hass_discover_signal_sensor["~"] = "homeassistant/sensor/"+clientId+"W";
+  hass_discover_signal_sensor["device_class"] = "signal_strength";
+  hass_discover_signal_sensor["name"] = "Signal Strength "+clientId;
+  hass_discover_signal_sensor["state_topic"] = "~/WiFi/RSSI_pct";        
+  hass_discover_signal_sensor["unit_of_measurement"] = "%"; 
+  hass_discover_signal_sensor["uniq_id"] = "W"+String(ESP.getChipId(), HEX); // unique_id
+
+  serializeJson(hass_discover_signal_sensor, hass_discover_signal_sensor_str);
+
+  const char dev_reg_tpl_s[] = R"=====(, "device": {"ids": ["%s"]} })=====";  // device reg
+  char dev_reg_s[256];
+
+  sprintf(dev_reg_s, dev_reg_tpl_s, String(ESP.getChipId(), HEX).c_str());
+  hass_discover_signal_sensor_str = hass_discover_signal_sensor_str.substring(0, hass_discover_signal_sensor_str.length() - 1);
+
+  hass_discover_signal_sensor_str += dev_reg_s;
+
+  mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/config").c_str(), hass_discover_signal_sensor_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+
+  // Время непрерывной работы
+  DynamicJsonDocument hass_discover_uptime_sensor(1024);
+  String hass_discover_uptime_sensor_str;
+
+  hass_discover_uptime_sensor["~"] = "homeassistant/sensor/"+clientId+"U";
+  hass_discover_uptime_sensor["ic"] = "mdi:timer";
+  hass_discover_uptime_sensor["name"] = "Uptime "+clientId; 
+  hass_discover_uptime_sensor["state_topic"] = "~/uptime";        
+  hass_discover_uptime_sensor["unit_of_measurement"] = "s"; 
+  hass_discover_uptime_sensor["uniq_id"] = "U"+String(ESP.getChipId(), HEX); // unique_id
+
+  serializeJson(hass_discover_uptime_sensor, hass_discover_uptime_sensor_str);
+
+  hass_discover_uptime_sensor_str = hass_discover_uptime_sensor_str.substring(0, hass_discover_uptime_sensor_str.length() - 1);
+  hass_discover_uptime_sensor_str += dev_reg_s;
+
+  mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/config").c_str(), hass_discover_uptime_sensor_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+
+  
+}
+
+void infoCallback() {
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/uptime").c_str(), String(millis()/1000).c_str(), true);
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI").c_str(), String(WiFi.RSSI()).c_str(), true);    
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI_pct").c_str(), String(2*(WiFi.RSSI()+100)).c_str(), true);    
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/channel").c_str(), String(WiFi.channel()).c_str(), true);    
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/ResetReason").c_str(), String(ESP.getResetReason()).c_str(), true);    
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"/VCC").c_str(), String((float)ESP.getVcc()/1000.0f).c_str(), true);    
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
+
 }
