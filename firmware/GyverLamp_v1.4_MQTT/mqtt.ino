@@ -82,8 +82,6 @@ void MQTTUpdateState () {
    sprintf(sRGB, "%d,%d,%d", r, g, b);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB, true);
 
-   mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
-
 }
 
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {
@@ -207,9 +205,10 @@ void MQTTreconnect() {
           Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER);
 
           // подключаемся к MQTT серверу
-          if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD)) {
+          if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD, String("homeassistant/light/"+clientId+"/state").c_str(), 0,  true, "offline")) {
           
             Serial.println("connected!");
+            mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
 
             mqtt_timeout = 5000;
             mqtt_reconnection_count = 0;
@@ -297,7 +296,6 @@ void HomeAssistantSendDiscoverConfig() {
   const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.4 MQTT"})=====";  // device reg
   char dev_reg[256];
 
-  //sprintf(dev_reg, dev_reg_tpl, String("\""+String(ESP.getChipId(), HEX)+"\", \"W"+String(ESP.getChipId(), HEX)+"\"").c_str());
   sprintf(dev_reg, dev_reg_tpl, String(ESP.getChipId(), HEX).c_str());
   hass_discover_str = hass_discover_str.substring(0, hass_discover_str.length() - 1);
 
@@ -352,7 +350,6 @@ void HomeAssistantSendDiscoverConfig() {
 
   mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/config").c_str(), hass_discover_uptime_sensor_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
 
-  
 }
 
 void infoCallback() {
@@ -362,6 +359,5 @@ void infoCallback() {
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/channel").c_str(), String(WiFi.channel()).c_str(), true);    
     mqttclient.publish(String("homeassistant/light/"+clientId+"/ResetReason").c_str(), String(ESP.getResetReason()).c_str(), true);    
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"/VCC").c_str(), String((float)ESP.getVcc()/1000.0f).c_str(), true);    
-    mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
 
 }

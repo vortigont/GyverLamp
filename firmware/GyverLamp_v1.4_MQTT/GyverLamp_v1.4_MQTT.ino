@@ -282,6 +282,8 @@ void setup() {
     Serial.println("Kb");
     #endif
 
+    WiFi.setOutputPower(20);
+
     if (!MDNS.begin(clientId)) {
         Serial.println("Error setting up MDNS responder!");
     }
