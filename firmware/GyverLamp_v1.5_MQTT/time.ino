@@ -39,7 +39,7 @@ void timeTick() {
     fill_solid(leds, NUM_LEDS, dawnColor);
     fillString(timeStr, CRGB::Black, false);
     delay(1);
-    yield();  // ещё раз пнуть собаку
+    yield();
     FastLED.show();
   }
 }

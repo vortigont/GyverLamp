@@ -4,7 +4,7 @@ void buttonTick() {
 
   if (!_BTN_CONNECTED) return;
 
-  // Необходимое время для калибровки сенсорной кнопки
+  // Необходимое время для калибровки сенсорной кнопки при плотном прилегании к стеклу
   //if (millis() < 10000) return;
 
   touch.tick();
@@ -26,6 +26,7 @@ void buttonTick() {
         MQTTUpdateState();
       }
       sendSettings_flag = true;
+      MQTTUpdateState();
     }
   }
 
