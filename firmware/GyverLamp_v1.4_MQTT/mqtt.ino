@@ -319,6 +319,9 @@ void HomeAssistantSendDiscoverConfig() {
   hass_discover_signal_sensor["state_topic"] = "~/WiFi/RSSI_pct";        
   hass_discover_signal_sensor["unit_of_measurement"] = "%"; 
   hass_discover_signal_sensor["uniq_id"] = "W"+String(ESP.getChipId(), HEX); // unique_id
+  hass_discover_signal_sensor["avty_t"] = String("homeassistant/light/"+clientId+"/state");  // availability_topic
+  hass_discover_signal_sensor["pl_avail"] = "online";        // payload_available
+  hass_discover_signal_sensor["pl_not_avail"] = "offline";   // payload_not_available
 
   serializeJson(hass_discover_signal_sensor, hass_discover_signal_sensor_str);
 
@@ -342,6 +345,9 @@ void HomeAssistantSendDiscoverConfig() {
   hass_discover_uptime_sensor["state_topic"] = "~/uptime";        
   hass_discover_uptime_sensor["unit_of_measurement"] = "s"; 
   hass_discover_uptime_sensor["uniq_id"] = "U"+String(ESP.getChipId(), HEX); // unique_id
+  hass_discover_uptime_sensor["avty_t"] = String("homeassistant/light/"+clientId+"/state");   // availability_topic
+  hass_discover_uptime_sensor["pl_avail"] = "online";        // payload_available
+  hass_discover_uptime_sensor["pl_not_avail"] = "offline";   // payload_not_available
 
   serializeJson(hass_discover_uptime_sensor, hass_discover_uptime_sensor_str);
 
