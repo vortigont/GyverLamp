@@ -9,6 +9,7 @@ void buttonTick() {
 
   touch.tick();
   if (touch.isSingle()) {
+    demo = false;
     if (dawnFlag) {
       manualOff = true;
       dawnFlag = false;
@@ -31,6 +32,7 @@ void buttonTick() {
   }
 
   if (ONflag && touch.isDouble()) {
+    demo = false;
     if (++currentMode >= MODE_AMOUNT) currentMode = 0;
     FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
@@ -43,6 +45,7 @@ void buttonTick() {
   }
 
 if (ONflag && touch.isTriple()) {
+    demo = false;
     if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
     FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
@@ -68,6 +71,7 @@ if (ONflag && touch.isTriple()) {
   if (ONflag && touch.isHolded()) {
     brightDirection = !brightDirection;
   }
+  
   if (ONflag && touch.isStep()) {
     if (brightDirection) {
       if (modes[currentMode].brightness < 10) modes[currentMode].brightness += 1;

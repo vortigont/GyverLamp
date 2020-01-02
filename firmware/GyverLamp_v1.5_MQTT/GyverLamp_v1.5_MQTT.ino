@@ -30,6 +30,10 @@
    -  Синхронизированы изменения с версией 1.5.5 оригинальной прошивки
    -  Добавлено: режим "недоступно" в HomeAssistant после  обесточивания лампы
    -  Добавлено: Управление мощностью передатчика
+   -  Добавлено: Запуск точки доступа с открытием портала первоначальной настройки. Для его активации нужно в течении одной минуты пять раз подать питание и обесточить лампу (включить/выключить из розетки)
+   -  Добавлено: Демо режим: в демо режиме эффекты запускаются случайно по таймеру. Задать интервал обновления можно в переменной Timer *demoTimer = new Timer(60000);
+                                                                                                                                                                 ^  - в миллисекундах 
+   -  Добавлено: В демо режиме пропускается эффект "смена цвета" если переменная epilepsy инициализирована в false
 
 */
 
@@ -142,6 +146,10 @@ byte r = 255;
 byte g = 255;
 byte b = 255;
 
+byte boot_count = 0;
+bool demo = false;
+bool epilepsy = false; // отключает эффект "смена цвета" в демо режиме если задано false. 
+
 struct {
   boolean state = false;
   int time = 0;
@@ -202,6 +210,7 @@ byte mac[6];
 ADC_MODE (ADC_VCC);
 
 Timer *infoTimer = new Timer(60000);
+Timer *demoTimer = new Timer(60000); //  время переключения эффектов в "Демо" режиме
 
 void setup() {
 
@@ -220,6 +229,13 @@ void setup() {
   
   EEPROM.begin(512);
 
+  // читаем количество запусков
+  boot_count = EEPROM.read(410);
+  boot_count +=1;
+
+  // записываем колиество перезапусков
+  EEPROM.write(410, boot_count); EEPROM.commit();
+
   // WI-FI
   if (ESP_MODE == 0) {    // режим точки доступа
     WiFi.softAPConfig(IPAddress(IP_AP[0], IP_AP[1], IP_AP[2], IP_AP[3]),
@@ -233,7 +249,7 @@ void setup() {
     Serial.println(myIP);
     USE_MQTT = false;
 
-  } else {                // подключаемся к роутеру
+  } else {  // подключаемся к роутеру
 
     char esp_id[32] = "";
 
@@ -259,6 +275,19 @@ void setup() {
     wifiManager.addParameter(&custom_mqtt_password);
     wifiManager.addParameter(&custom_mqtt_port);
     wifiManager.addParameter(&custom_text_2);
+
+    if (boot_count >= 5) {
+      while (!fillString("Сброс параметров подключения!", CRGB::Red, true)) {
+        delay(1); yield();
+      }
+
+      // обнуляем счетчик перезапусков
+      boot_count = 0; EEPROM.write(410, boot_count); EEPROM.commit();
+
+      if (!wifiManager.startConfigPortal()) {
+         Serial.println("failed to start config Portal");
+      }
+    }
 
     if (!wifiManager.autoConnect()) {
       if (!wifiManager.startConfigPortal()) {
@@ -413,10 +442,14 @@ void setup() {
   infoTimer->setOnTimer(&infoCallback);
   infoTimer->Start();
 
+  demoTimer->setOnTimer(&demoCallback);
+  demoTimer->Start();
+
 }
 
 void loop() {
   infoTimer->Update();
+  demoTimer->Update();
 
   parseUDP();
   effectsTick();

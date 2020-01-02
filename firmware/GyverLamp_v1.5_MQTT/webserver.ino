@@ -212,19 +212,27 @@ void routeSetConfig() {
     
   }
   
-  if (http->hasArg("currentMode")){
+  if (http->hasArg("currentMode")) {
     
     String value;
 
     value = http->arg("currentMode");
-    
     currentMode =  value.toInt();
-           
-    if (currentMode >= MODE_AMOUNT || currentMode < 0) currentMode = 0;
-    
+
+    if (currentMode == 18) {
+
+      demo = true;
+      currentMode = random(0, MODE_AMOUNT-1);      
+    } else {
+
+      demo = false;
+      currentMode =  value.toInt();
+      if (currentMode >= MODE_AMOUNT || currentMode < 0) currentMode = 0;
+    }
+
     manualOff = true;
     dawnFlag = false;
-    saveEEPROM();
+    settChanged = true;
     loadingFlag = true;
     FastLED.clear();
     delay(1);
@@ -391,6 +399,7 @@ void routeHome(){
           out += "<option value='15'>Снегопад</option>";
           out += "<option value='16'>Матрица</option>";
           out += "<option value='17'>Светлячки</option>";
+          out += "<option value='18'>Демо</option>";
           
         out += "</select>";
       out += "</div>";

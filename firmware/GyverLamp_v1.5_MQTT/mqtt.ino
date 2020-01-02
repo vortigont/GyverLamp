@@ -42,6 +42,7 @@ int Get_EFFIDX (String effect) {
   if (effect.equals("Снегопад")) return 15;
   if (effect.equals("Матрица")) return 16;
   if (effect.equals("Светлячки")) return 17;
+  if (effect.equals("Демо")) return 18;
 
 }
 
@@ -66,6 +67,7 @@ String Get_EFFName (int eff_idx) {
     case 15: return "Снегопад";
     case 16: return "Матрица";
     case 17: return "Светлячки";
+    case 18: return "Демо";
   }
 
 }
@@ -126,7 +128,16 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
       Serial.print("Command arrived: effect set to "); Serial.println(Payload);
 
-      currentMode = Get_EFFIDX(Payload);
+      if (Payload == "Демо") { 
+
+          demo = true; 
+          currentMode = random(0, MODE_AMOUNT-1);
+       } else {
+      
+          demo = false;
+          currentMode = Get_EFFIDX(Payload);
+       }
+
       saveEEPROM();
       loadingFlag = true;
       FastLED.clear();
@@ -292,7 +303,7 @@ void HomeAssistantSendDiscoverConfig() {
   String hass_discover_str;
   serializeJson(hass_discover, hass_discover_str);
 
-  const char eff_list[] = R"=====(, "fx_list": ["Конфетти", "Огонь", "Радуга верт.", "Радуга гориз.", "Смена цвета", "Безумие 3D", "Облака 3D", "Лава 3D", "Плазма 3D", "Радуга 3D", "Павлин 3D", "Зебра 3D", "Лес 3D", "Океан 3D", "Цвет", "Снегопад", "Матрица", "Светлячки"] })=====";  // effect_list
+  const char eff_list[] = R"=====(, "fx_list": ["Конфетти", "Огонь", "Радуга верт.", "Радуга гориз.", "Смена цвета", "Безумие 3D", "Облака 3D", "Лава 3D", "Плазма 3D", "Радуга 3D", "Павлин 3D", "Зебра 3D", "Лес 3D", "Океан 3D", "Цвет", "Снегопад", "Матрица", "Светлячки", "Демо"] })=====";  // effect_list
   const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.4 MQTT"})=====";  // device reg
   char dev_reg[256];
 
@@ -364,6 +375,29 @@ void infoCallback() {
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI_pct").c_str(), String(2*(WiFi.RSSI()+100)).c_str(), true);    
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/channel").c_str(), String(WiFi.channel()).c_str(), true);    
     mqttclient.publish(String("homeassistant/light/"+clientId+"/ResetReason").c_str(), String(ESP.getResetReason()).c_str(), true);    
-    mqttclient.publish(String("homeassistant/sensor/"+clientId+"/VCC").c_str(), String((float)ESP.getVcc()/1000.0f).c_str(), true);    
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"/VCC").c_str(), String((float)ESP.getVcc()/1000.0f).c_str(), true);
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/BootCount").c_str(), String(boot_count).c_str(), true);    
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/DemoMode").c_str(), String(demo).c_str(), true);
+
+    if (boot_count > 1) { boot_count = 0; EEPROM.write(410, boot_count); EEPROM.commit(); }
+
+}
+
+void demoCallback() {
+
+    if (demo) { 
+
+      currentMode = random(0, MODE_AMOUNT-1);
+      if (!epilepsy) {
+          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);          
+        }
+      
+      loadingFlag = true;
+      FastLED.clear();
+      delay(1);
+      sendCurrent();
+      FastLED.setBrightness(modes[currentMode].brightness);
+      MQTTUpdateState();
+   } 
 
 }
