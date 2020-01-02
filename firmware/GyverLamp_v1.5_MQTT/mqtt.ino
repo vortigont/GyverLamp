@@ -132,6 +132,10 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
           demo = true; 
           currentMode = random(0, MODE_AMOUNT-1);
+
+          if (!epilepsy) {
+          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);          
+        }
        } else {
       
           demo = false;
