@@ -69,4 +69,8 @@ void changePower() {
     delay(2);
     FastLED.show();
   }
+
+  // записываем статус лампы в память 
+  EEPROM.write(420, ONflag); EEPROM.commit();
+  
 }

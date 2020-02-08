@@ -21,6 +21,7 @@ void buttonTick() {
       if (ONflag) {
         ONflag = false;
         changePower();
+        MQTTUpdateState();
       } else {
         ONflag = true;
         changePower();

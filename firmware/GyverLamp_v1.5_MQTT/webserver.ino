@@ -207,6 +207,7 @@ void routeSetConfig() {
   if (http->hasArg("on")) {
     
     ONflag = (http->arg("on").toInt() > 0) ? true : false;
+    settChanged = true;
     changePower();
     sendCurrent();
     
@@ -233,6 +234,7 @@ void routeSetConfig() {
     manualOff = true;
     dawnFlag = false;
     settChanged = true;
+    saveEEPROM();
     loadingFlag = true;
     FastLED.clear();
     delay(1);
@@ -315,17 +317,20 @@ void routeSetAlarmConfig(){
     if(http->hasArg("day_"+String(i))){
       alarm[i].state = (http->arg("day_" + String(i)).toInt() > 0);
       saveAlarm(i);
+      settChanged = true;
     }
     if(http->hasArg("time_"+String(i))){
       
       alarm[i].time = http->arg("time_" + String(i)).substring(0,2).toInt() * 60 + http->arg("time_" + String(i)).substring(3,5).toInt();
       saveAlarm(i);
+      settChanged = true;
     }
   }
   
   if(http->hasArg("dawnMode")){
     dawnMode = http->arg("dawnMode").toInt();
     saveDawnMmode();
+    settChanged = true;
   }
   
   routeGetAlarmConfig();
