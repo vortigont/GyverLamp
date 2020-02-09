@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 // ==================== CONSTRUCTOR ====================
-GButton::GButton(int8_t pin, uint8_t type, uint8_t dir) {
+GButton::GButton(int8_t pin, bool type, bool dir) {
 	if (pin != BTN_NO_PIN) {
 		_PIN = (uint8_t)pin;
 		flags.noPin = false;
@@ -19,26 +19,26 @@ GButton::GButton(int8_t pin, uint8_t type, uint8_t dir) {
 void GButton::setDebounce(uint16_t debounce) {
 	_debounce = debounce;
 }
-void GButton::setTimeout(uint16_t timeout) {
-	_timeout = timeout;
+void GButton::setTimeout(uint16_t new_timeout) {
+	_timeout = new_timeout;
 }
-void GButton::setClickTimeout(uint16_t timeout) {
-	_click_timeout = timeout;
+void GButton::setClickTimeout(uint16_t new_timeout) {
+	_click_timeout = new_timeout;
 }
 void GButton::setStepTimeout(uint16_t step_timeout) {
 	_step_timeout = step_timeout;
 }
-void GButton::setType(uint8_t type) {
+void GButton::setType(bool type) {
 	flags.type = type;
 	if (!flags.noPin) {
 		if (type) pinMode(_PIN, INPUT);
 		else pinMode(_PIN, INPUT_PULLUP);
 	}	
 }
-void GButton::setDirection(uint8_t dir) {
+void GButton::setDirection(bool dir) {
 	flags.inv_state = dir;
 }
-void GButton::setTickMode(uint8_t tickMode) {
+void GButton::setTickMode(bool tickMode) {
 	flags.tickMode = tickMode;
 }
 
@@ -116,6 +116,10 @@ uint8_t GButton::getClicks() {
 	last_counter = 0;
 	return thisCount;	
 }
+uint8_t GButton::getHoldClicks() {
+	if (flags.tickMode) GButton::tick();
+	return flags.hold_flag ? last_hold_counter : 0;	
+}
 boolean GButton::isStep(byte clicks) {
 	if (flags.tickMode) GButton::tick();
 	if (btn_counter == clicks && flags.step_flag && (millis() - btn_timer >= _step_timeout)) {
@@ -123,6 +127,17 @@ boolean GButton::isStep(byte clicks) {
 		return true;
 	}
 	else return false;
+}
+
+void GButton::resetStates() {
+	flags.isPress_f = false;
+	flags.isRelease_f = false;
+	flags.isOne_f = false;
+	flags.isHolded_f = false;
+	flags.step_flag = false;
+	flags.counter_flag = false;
+	last_hold_counter = 0;
+	last_counter = 0;
 }
 
 // ==================== TICK ====================
@@ -176,6 +191,7 @@ void GButton::tick() {
 	// кнопка удерживается
 	if (btn_flag && btn_state && (thisMls - btn_timer >= _timeout) && !flags.hold_flag) {
 		flags.hold_flag = true;
+		last_hold_counter = btn_counter;
 		//btn_counter = 0;
 		//last_counter = 0;
 		flags.isHolded_f = true;
