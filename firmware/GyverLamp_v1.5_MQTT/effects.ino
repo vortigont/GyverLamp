@@ -279,3 +279,127 @@ void lightersRoutine() {
     drawPixelXY(lightersPos[0][i] / 10, lightersPos[1][i] / 10, lightersColor[i]);
   }
 }
+
+// ------------- метель -------------
+#define SNOW_DENSE            (60U)                         // плотность снега
+#define SNOW_TAIL_STEP        (100U)                        // длина хвоста
+#define SNOW_SATURATION       (0U)                          // насыщенность (от 0 до 255)
+void snowStormRoutine()
+{
+  if (loadingFlag)
+  {
+    loadingFlag = false;
+    FastLED.clear();
+  }
+ 
+  for (uint8_t i = 0U; i < WIDTH; i++)
+  {
+    if (getPixColorXY(i, HEIGHT - 1U) == 0U &&
+       (random(0, map(modes[currentMode].scale, 0U, 255U, 10U, 120U)) == 0U) &&
+        getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
+        getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
+    {
+      leds[getPixelNumber(i, HEIGHT - 1U)] = CHSV(random(0, 200), SNOW_SATURATION, 255U);
+    }
+  }
+
+  // сдвигаем по диагонали
+  for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
+  {
+    for (uint8_t x = WIDTH - 1U; x > 0U; x--)
+    {
+      drawPixelXY(x, y, getPixColorXY(x - 1U, y + 1U));
+    }
+    drawPixelXY(0, y, getPixColorXY(WIDTH - 1U, y + 1U));
+  }
+
+  for (uint8_t i = 0U; i < WIDTH; i++)
+  {
+    fadePixel(i, HEIGHT - 1U, SNOW_TAIL_STEP);
+  }
+}
+
+// ------------- звездопад -------------
+#define STAR_DENSE            (60U)                         // плотность комет
+#define STAR_TAIL_STEP        (100U)                        // длина хвоста кометы
+#define STAR_SATURATION       (200U)                        // насыщенность кометы (от 0 до 255)
+void starfallRoutine()
+{
+  if (loadingFlag)
+  {
+    loadingFlag = false;
+    FastLED.clear();
+  }
+ 
+  for (uint8_t i = 0U; i < WIDTH; i++)
+  {
+    if (getPixColorXY(i, HEIGHT - 1U) == 0U &&
+       (random(0, map(modes[currentMode].scale, 0U, 255U, 10U, 120U)) == 0U) &&
+        getPixColorXY(i + 1U, HEIGHT - 1U) == 0U &&
+        getPixColorXY(i - 1U, HEIGHT - 1U) == 0U)
+    {
+      leds[getPixelNumber(i, HEIGHT - 1U)] = CHSV(random(0, 200), STAR_SATURATION, 255U);
+    }
+  }
+
+  // сдвигаем по диагонали
+  for (uint8_t y = 0U; y < HEIGHT - 1U; y++)
+  {
+    for (uint8_t x = WIDTH - 1U; x > 0U; x--)
+    {
+      drawPixelXY(x, y, getPixColorXY(x - 1U, y + 1U));
+    }
+    drawPixelXY(0, y, getPixColorXY(WIDTH - 1U, y + 1U));
+  }
+
+  for (uint8_t i = 0U; i < WIDTH; i++)
+  {
+    fadePixel(i, HEIGHT - 1U, STAR_TAIL_STEP);
+  }
+}
+
+// ------------- пейнтбол -------------
+#define BORDERTHICKNESS       (1U)                          // глубина бордюра для размытия яркой частицы: 0U - без границы (резкие края); 1U - 1 пиксель (среднее размытие) ; 2U - 2 пикселя (глубокое размытие)
+const uint8_t paintWidth = WIDTH - BORDERTHICKNESS * 2;
+const uint8_t paintHeight = HEIGHT - BORDERTHICKNESS * 2;
+
+void lightBallsRoutine()
+{
+  // Apply some blurring to whatever's already on the matrix
+  // Note that we never actually clear the matrix, we just constantly
+  // blur it repeatedly.  Since the blurring is 'lossy', there's
+  // an automatic trend toward black -- by design.
+  uint8_t blurAmount = dim8_raw(beatsin8(3, 64, 100));
+  blur2d(leds, WIDTH, HEIGHT, blurAmount);
+
+  // Use two out-of-sync sine waves
+  uint16_t  i = beatsin16( 79, 0, 255); //91
+  uint16_t  j = beatsin16( 67, 0, 255); //109
+  uint16_t  k = beatsin16( 53, 0, 255); //73
+  uint16_t  m = beatsin16( 97, 0, 255); //123
+
+  // The color of each point shifts over time, each at a different speed.
+  uint32_t ms = millis() / (modes[currentMode].scale / 4 + 1);
+  leds[getPixelNumber( highByte(i * paintWidth) + BORDERTHICKNESS, highByte(j * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 29, 200U, 255U);
+  leds[getPixelNumber( highByte(j * paintWidth) + BORDERTHICKNESS, highByte(k * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 41, 200U, 255U);
+  leds[getPixelNumber( highByte(k * paintWidth) + BORDERTHICKNESS, highByte(m * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 37, 200U, 255U);
+  leds[getPixelNumber( highByte(m * paintWidth) + BORDERTHICKNESS, highByte(i * paintHeight) + BORDERTHICKNESS)] += CHSV( ms / 53, 200U, 255U);
+}
+// Trivial XY function for the SmartMatrix; use a different XY
+// function for different matrix grids. See XYMatrix example for code.
+uint16_t XY(uint8_t x, uint8_t y)
+{
+  uint16_t i;
+  if (y & 0x01)
+  {
+    // Odd rows run backwards
+    uint8_t reverseX = (WIDTH - 1) - x;
+    i = (y * WIDTH) + reverseX;
+  }
+  else
+  {
+    // Even rows run forwards
+    i = (y * WIDTH) + x;
+  }
+  return i;
+}
