@@ -42,6 +42,8 @@ void effectsTick() {
           break;
         case 17: lightersRoutine();
           break;
+        case 18: aquaRoutine();
+          break;
       }
       FastLED.show();
     }

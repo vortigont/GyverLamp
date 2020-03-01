@@ -42,7 +42,8 @@ int Get_EFFIDX (String effect) {
   if (effect.equals("Снегопад")) return 15;
   if (effect.equals("Матрица")) return 16;
   if (effect.equals("Светлячки")) return 17;
-  if (effect.equals("Демо")) return 18;
+  if (effect.equals("Аквариум")) return 18;
+  if (effect.equals("Демо")) return 19;
 
 }
 
@@ -67,7 +68,8 @@ String Get_EFFName (int eff_idx) {
     case 15: return "Снегопад";
     case 16: return "Матрица";
     case 17: return "Светлячки";
-    case 18: return "Демо";
+    case 18: return "Аквариум";
+    case 19: return "Демо";
   }
 
 }
@@ -307,7 +309,7 @@ void HomeAssistantSendDiscoverConfig() {
   String hass_discover_str;
   serializeJson(hass_discover, hass_discover_str);
 
-  const char eff_list[] = R"=====(, "fx_list": ["Конфетти", "Огонь", "Радуга верт.", "Радуга гориз.", "Смена цвета", "Безумие 3D", "Облака 3D", "Лава 3D", "Плазма 3D", "Радуга 3D", "Павлин 3D", "Зебра 3D", "Лес 3D", "Океан 3D", "Цвет", "Снегопад", "Матрица", "Светлячки", "Демо"] })=====";  // effect_list
+  const char eff_list[] = R"=====(, "fx_list": ["Конфетти", "Огонь", "Радуга верт.", "Радуга гориз.", "Смена цвета", "Безумие 3D", "Облака 3D", "Лава 3D", "Плазма 3D", "Радуга 3D", "Павлин 3D", "Зебра 3D", "Лес 3D", "Океан 3D", "Цвет", "Снегопад", "Матрица", "Светлячки",  "Аквариум", "Демо"] })=====";  // effect_list
   const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.5.5 MQTT"})=====";  // device reg
   char dev_reg[256];
 
