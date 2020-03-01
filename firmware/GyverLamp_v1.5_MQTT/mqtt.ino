@@ -105,7 +105,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Command arrived: ");
       Serial.println(Payload);
 
-      ONflag = (Payload == "ON") ? true : false;      
+      ONflag = (Payload == "ON") ? true : false;
       changePower();
       sendCurrent();
       MQTTUpdateState();
@@ -308,7 +308,7 @@ void HomeAssistantSendDiscoverConfig() {
   serializeJson(hass_discover, hass_discover_str);
 
   const char eff_list[] = R"=====(, "fx_list": ["Конфетти", "Огонь", "Радуга верт.", "Радуга гориз.", "Смена цвета", "Безумие 3D", "Облака 3D", "Лава 3D", "Плазма 3D", "Радуга 3D", "Павлин 3D", "Зебра 3D", "Лес 3D", "Океан 3D", "Цвет", "Снегопад", "Матрица", "Светлячки", "Демо"] })=====";  // effect_list
-  const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.4 MQTT"})=====";  // device reg
+  const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.5.5 MQTT"})=====";  // device reg
   char dev_reg[256];
 
   sprintf(dev_reg, dev_reg_tpl, String(ESP.getChipId(), HEX).c_str());

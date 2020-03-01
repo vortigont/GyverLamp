@@ -1,8 +1,9 @@
 uint32_t effTimer;
+bool stop_eff = false;
 
 void effectsTick() {
   if (!dawnFlag) {
-    if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
+    if (!stop_eff && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
       effTimer = millis();
       switch (currentMode) {
         case 0: sparklesRoutine();
@@ -48,23 +49,33 @@ void effectsTick() {
 }
 
 void changePower() {
+  if (ONflag && !stop_eff) return;
+  
   if (ONflag) {
-    effectsTick();
-    for (int i = 0; i < modes[currentMode].brightness; i += 8) {
+    // Включение
+    stop_eff = false;
+    int steps = 1 + round(modes[currentMode].brightness / 80);
+    for (int i = 0; i <= modes[currentMode].brightness; i += steps) {
       FastLED.setBrightness(i);
-      delay(1);
+      effectsTick();
+      delay(2);
       FastLED.show();
     }
     FastLED.setBrightness(modes[currentMode].brightness);
     delay(2);
     FastLED.show();
+    
   } else {
-    effectsTick();
-    for (int i = modes[currentMode].brightness; i > 8; i -= 8) {
+    // Выключение
+    int steps = 1 + round(modes[currentMode].brightness / 40);
+    for (int i = modes[currentMode].brightness; i >= 0; i -= steps) {
       FastLED.setBrightness(i);
-      delay(1);
+      effectsTick();
+      delay(2);
       FastLED.show();
     }
+
+    stop_eff = true;
     FastLED.clear();
     delay(2);
     FastLED.show();
