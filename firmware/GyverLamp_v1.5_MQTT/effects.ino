@@ -175,9 +175,10 @@ void rainbowHorizontal() {
 
 // ---------------------------------------- ЦВЕТА ------------------------------------------
 void colorsRoutine() {
-  hue += modes[4].scale;
+  uint32_t ms = millis() / (modes[currentMode].speed + 1);
+
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CHSV(hue, 255, 255);
+    leds[i] = CHSV(ms, 200U, 255U);
   }
 }
 
