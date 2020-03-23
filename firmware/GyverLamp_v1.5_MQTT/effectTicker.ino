@@ -48,6 +48,8 @@ void effectsTick() {
           break;
         case 20: lightBallsRoutine();
           break;
+        case 21: spiroRoutine();
+          break;
       }
       FastLED.show();
     }

@@ -220,7 +220,7 @@ void routeSetConfig() {
     value = http->arg("currentMode");
     currentMode =  value.toInt();
 
-    if (currentMode == 21) {
+    if (currentMode == 22) {
 
       demo = true;
       currentMode = random(0, MODE_AMOUNT-1);      
@@ -407,7 +407,8 @@ void routeHome(){
           out += "<option value='18'>Аквариум</option>";
           out += "<option value='19'>Звездопад</option>";
           out += "<option value='20'>Пейнтбол</option>";
-          out += "<option value='21'>Демо</option>";
+          out += "<option value='21'>Спираль</option>";
+          out += "<option value='22'>Демо</option>";
           
         out += "</select>";
       out += "</div>";
