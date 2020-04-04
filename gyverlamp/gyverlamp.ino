@@ -14,6 +14,7 @@
 */
 
 #include "Globals.h"
+#include "gyverlamp.h"
 
 #include "timerMinim.h"
 #include <FastLED.h>
@@ -34,13 +35,12 @@
 #include <Timer.h>
 #include "fonts.h"
 
-#define MQTT_MAX_PACKET_SIZE 1024
 // ------------------- ТИПЫ --------------------
 
 CRGB leds[NUM_LEDS];
 WiFiUDP Udp;
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT * 3600, NTP_INTERVAL);
+NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT_OFFSET * 3600, NTP_INTERVAL);
 timerMinim timeTimer(1000);
 timerMinim timeStrTimer(120);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -56,9 +56,9 @@ String inputBuffer;
 static const byte maxDim = max(WIDTH, HEIGHT);
 
 struct {
-  byte brightness = 50;
-  byte speed = 30;
-  byte scale = 40;
+  byte brightness = DEFAULT_BRIGHNESS;
+  byte speed = DEFAULT_SPEED;
+  byte scale = DEFAULT_SCALE;
 } modes[MODE_AMOUNT];
 
 byte r = 255;
@@ -128,8 +128,8 @@ byte mac[6];
 
 ADC_MODE (ADC_VCC);
 
-Timer *infoTimer = new Timer(60000);
-Timer *demoTimer = new Timer(60000); //  время переключения эффектов в "Демо" режиме
+Timer *infoTimer = new Timer(DEFAILT_TIMER);
+Timer *demoTimer = new Timer(DEFAILT_TIMER); //  время переключения эффектов в "Демо" режиме
 
 void setup() {
 
@@ -386,7 +386,6 @@ void loop() {
   if (USE_MQTT) mqttclient.loop();
 
   ArduinoOTA.handle();
-  yield();
 }
 
 void eeWriteInt(int pos, int val) {
