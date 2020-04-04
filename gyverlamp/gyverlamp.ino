@@ -90,7 +90,7 @@ boolean settChanged = false;
 // Безумие 3D, Облака 3D, Лава 3D, Плазма 3D, Радуга 3D,
 // Павлин 3D, Зебра 3D, Лес 3D, Океан 3D,
 
-unsigned char matrixValue[8][16];
+unsigned char matrixValue[WIDTH][HEIGHT];
 String lampIP = "";
 byte hrs, mins, secs;
 byte days;
