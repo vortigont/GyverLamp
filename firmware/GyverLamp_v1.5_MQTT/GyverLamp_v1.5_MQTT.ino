@@ -133,6 +133,7 @@ timerMinim timeTimer(1000);
 timerMinim timeStrTimer(120);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
+ESP8266HTTPUpdateServer *httpUpdater;
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 
@@ -178,7 +179,7 @@ boolean settChanged = false;
 // Безумие 3D, Облака 3D, Лава 3D, Плазма 3D, Радуга 3D,
 // Павлин 3D, Зебра 3D, Лес 3D, Океан 3D,
 
-unsigned char matrixValue[8][16];
+unsigned char matrixValue[WIDTH][HEIGHT];
 String lampIP = "";
 byte hrs, mins, secs;
 byte days;
