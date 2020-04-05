@@ -1,6 +1,8 @@
 void webserver() {
   
   http = new(ESP8266WebServer);
+  httpUpdater = new(ESP8266HTTPUpdateServer);
+  httpUpdater->setup(http);
 
   if (http !=NULL) {
 
@@ -23,6 +25,11 @@ void webserver() {
     
     /** получить текущие настройки/конфигурацию будильника */
     http->on("/getalarmconfig", routeGetAlarmConfig);
+
+    /** stub for favicon  **/
+    http->on("/favicon.ico", []() {
+      http->send(404, F("text/plain"), F("none"));
+    });
 
     http->begin();
     

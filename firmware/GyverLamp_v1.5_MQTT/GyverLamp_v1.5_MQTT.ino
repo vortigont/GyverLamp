@@ -133,6 +133,7 @@ timerMinim timeTimer(1000);
 timerMinim timeStrTimer(120);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
+ESP8266HTTPUpdateServer *httpUpdater;
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 
