@@ -1,7 +1,7 @@
 // ============= НАСТРОЙКИ =============
 // -------- ВРЕМЯ -------
-#define GMT_OFFSET 3                      // часовой пояс, смещение от Гринвича (Москва = 3)
-#define NTP_ADDRESS  "ru.pool.ntp.org"    // сервер времени
+#define TZONE TZ_Europe_Moscow        // Временная зона как она заданна в заголовках ядра >2.6.0 https://github.com/esp8266/Arduino/blob/master/cores/esp8266/TZ.h
+#define COUNTRY "ru"                  // двухбуквенный код страны, определяет ближайший NTP сервер поумолчанию
 
 // -------- РАССВЕТ -------
 #define DAWN_BRIGHT 200       // макс. яркость рассвета
