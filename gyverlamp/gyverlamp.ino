@@ -27,7 +27,6 @@
 #include <WiFiManager.h>
 #include <WiFiUdp.h>
 #include <EEPROM.h>
-#include <NTPClient.h>
 #include <GyverButton.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
@@ -39,8 +38,6 @@
 
 CRGB leds[NUM_LEDS];
 WiFiUDP Udp;
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, NTP_ADDRESS, GMT_OFFSET * 3600, NTP_INTERVAL);
 timerMinim timeTimer(1000);
 timerMinim timeStrTimer(120);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
@@ -93,9 +90,8 @@ boolean settChanged = false;
 
 unsigned char matrixValue[WIDTH][HEIGHT];
 String lampIP = "";
-byte hrs, mins, secs;
-byte days;
-String timeStr = "00:00";
+static time_t now;
+bool timeavailable = 0;       // timesync status
 
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
@@ -129,8 +125,8 @@ byte mac[6];
 
 ADC_MODE (ADC_VCC);
 
-Timer *infoTimer = new Timer(DEFAILT_TIMER);
-Timer *demoTimer = new Timer(DEFAILT_TIMER); //  время переключения эффектов в "Демо" режиме
+Timer *infoTimer = new Timer(DEFAULT_TIMER);
+Timer *demoTimer = new Timer(DEFAULT_TIMER); //  время переключения эффектов в "Демо" режиме
 
 void setup() {
 
@@ -159,7 +155,11 @@ void setup() {
   // читаем статус лампы
   ONflag = EEPROM.read(420);
 
-  // WI-FI
+  // Wi-Fi
+  static WiFiEventHandler e1, e2;
+  e1 = WiFi.onStationModeGotIP(onSTAGotIP);   // WiFi client gets IP event
+  e2 = WiFi.onStationModeDisconnected(onSTADisconnec); // WiFi client disconnected event
+
   if (ESP_MODE == 0) {    // режим точки доступа
     WiFi.softAPConfig(IPAddress(IP_AP[0], IP_AP[1], IP_AP[2], IP_AP[3]),
                       IPAddress(192, 168, 4, 1),
@@ -325,25 +325,13 @@ void setup() {
   // отправляем настройки
   sendSettings();
 
-  timeClient.begin();
   memset(matrixValue, 0, sizeof(matrixValue));
 
   randomSeed(micros());
 
-  // получаем время
-  byte count = 0;
-  while (count < 5) {
-    if (timeClient.update()) {
-      hrs = timeClient.getHours();
-      mins = timeClient.getMinutes();
-      secs = timeClient.getSeconds();
-      days = timeClient.getDay();
-      break;
-    }
-    count++;
-    delay(500);
-  }
-  updTime();
+  // инициализируем NTP-клиента
+  settimeofday_cb(timeset);
+  configTime(TZONE, NTP_SERVER);
 
   webserver();
   MDNS.addService("http", "tcp", 80);
@@ -377,7 +365,7 @@ void loop() {
   parseUDP();
   effectsTick();
   eepromTick();
-  timeTick();
+  if (timeTimer.isReady()) { timeTick(); }
   buttonTick();
 
   MDNS.update();
@@ -406,4 +394,16 @@ int eeGetInt(int pos) {
   *(p + 2)  = EEPROM.read(pos + 2);
   *(p + 3)  = EEPROM.read(pos + 3);
   return val;
+}
+
+// WiFi connection callbacks
+// station aquired IP
+void onSTAGotIP(WiFiEventStationModeGotIP ipInfo) {
+  sntp_init();    // start ntp updates
+}
+
+// station disconnect
+void onSTADisconnec(WiFiEventStationModeDisconnected event_info) {
+    sntp_stop();              // disable NTP updates on station disconnect
+    timeavailable=0;
 }

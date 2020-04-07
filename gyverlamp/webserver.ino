@@ -1,5 +1,5 @@
 void webserver() {
-  
+
   http = new(ESP8266WebServer);
   httpUpdater = new(ESP8266HTTPUpdateServer);
   httpUpdater->setup(http);
@@ -10,19 +10,19 @@ void webserver() {
 
     /** главная */
     http->on("/", routeHome);
-    
+
     /** прием конфигурации */
-    http->on("/setconfig", routeSetConfig); 
-    
+    http->on("/setconfig", routeSetConfig);
+
     /** получить текущие настройки/конфигурацию */
-    http->on("/getconfig", routeGetConfig); 
-  
+    http->on("/getconfig", routeGetConfig);
+
     /** страница настройка будильника */
-    http->on("/alarm", routeAlarm); 
-    
+    http->on("/alarm", routeAlarm);
+
     /** прием конфигурации будильника */
-    http->on("/setalarmconfig", routeSetAlarmConfig); 
-    
+    http->on("/setalarmconfig", routeSetAlarmConfig);
+
     /** получить текущие настройки/конфигурацию будильника */
     http->on("/getalarmconfig", routeGetAlarmConfig);
 
@@ -32,14 +32,14 @@ void webserver() {
     });
 
     http->begin();
-    
+
     Serial.printf("Запущен веб сервер по адресу: http://%s.local/\r\n", clientId.c_str());
-    
+
   } else {
-    
+
     Serial.println("Ошибка создания веб сервера. \r\n");
   }
-  
+
 }
 
 /**
@@ -52,9 +52,9 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200) {
       return http->requestAuthentication();
   }
   #endif
-   
+
   String html;
-  
+
   html = "<html>";
     html += "<head>";
       html += "<title>" + title + "</title>";
@@ -144,12 +144,12 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200) {
       html += "        }\n";
       html += "    }\n";
       html += "    </script>\n";
-      
+
     html += "</body>";
   html += "</html>";
-  
+
   http->sendHeader("Cache-Control","max-age=0, private, must-revalidate");
-  http->send(code, "text/html; charset=utf-8", html); 
+  http->send(code, "text/html; charset=utf-8", html);
 }
 
 /**
@@ -157,7 +157,7 @@ void responseHtml(String out, String title = "AlexGyver Lamp", int code = 200) {
  */
 void routeNotFound() {
   String out;
-  
+
   out = "Путь не найден";
   out += "<br />URI: ";
   out += http->uri();
@@ -174,7 +174,7 @@ void routeNotFound() {
 }
 
 /**
- * отправка текущей конфигурации 
+ * отправка текущей конфигурации
  * + отправка JSON(обязательно должен завершаться запятой)
  */
 void routeGetConfig() {
@@ -196,7 +196,7 @@ void routeGetConfig() {
   out += "\"scale\": " + String(modes[currentMode].scale) + ",";
   out += "\"on\": " + String(ONflag);
   out += "}";
-  
+
   http->send(200, "text/json", out);
 }
 
@@ -210,18 +210,18 @@ void routeSetConfig() {
       return http->requestAuthentication();
   }
   #endif
-  
+
   if (http->hasArg("on")) {
-    
+
     ONflag = (http->arg("on").toInt() > 0) ? true : false;
     settChanged = true;
     changePower();
     sendCurrent();
-    
+
   }
-  
+
   if (http->hasArg("currentMode")) {
-    
+
     String value;
 
     value = http->arg("currentMode");
@@ -230,7 +230,7 @@ void routeSetConfig() {
     if (currentMode == 22) {
 
       demo = true;
-      currentMode = random(0, MODE_AMOUNT-1);      
+      currentMode = random(0, MODE_AMOUNT-1);
     } else {
 
       demo = false;
@@ -247,23 +247,23 @@ void routeSetConfig() {
     delay(1);
     sendCurrent();
     FastLED.setBrightness(modes[currentMode].brightness);
-    
+
   }
-  
+
   if(http->hasArg("scale")){
 
     byte scale = http->arg("scale").toInt();
     if (currentMode == 17 && scale > 100) scale = 100;
-    
+
     modes[currentMode].scale = scale;
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
 
   }
-  
+
   if(http->hasArg("brightness")){
-    ONflag = true;    
+    ONflag = true;
     modes[currentMode].brightness = http->arg("brightness").toInt();
     changePower();
     FastLED.setBrightness(modes[currentMode].brightness);
@@ -273,7 +273,7 @@ void routeSetConfig() {
     eepromTimer = millis();
 
   }
-  
+
   if(http->hasArg("speed")){
     modes[currentMode].speed = http->arg("speed").toInt();
     loadingFlag = true;
@@ -281,18 +281,18 @@ void routeSetConfig() {
     eepromTimer = millis();
 
   }
-  
+
   /** в знак завершения операции отправим текущую конфигурацию */
   routeGetConfig();
   MQTTUpdateState();
-  
+
 }
 
 void routeAlarm(){
   String out, days[] = {"пн","вт","ср","чт","пт","сб","вс"};
   out = "<form>";
     for (byte i = 0; i < 7; i++) {
-      out += "<div class='ui-field-contain'>";  
+      out += "<div class='ui-field-contain'>";
           out += "<label for='day_" + String(i) + "'>"+days[i]+"</label>";
           out += "<select name='day_" + String(i) + "' id='day_" + String(i) + "' data-role='slider' data-mini='true'>";
               out += "<option value='0'></option>";
@@ -301,47 +301,46 @@ void routeAlarm(){
       out += "</div>";
       out += "<div class='ui-field-contain'><label for='time_" + String(i) + "'>время</label><input name='time_" + String(i) + "' id='time_" + String(i) + "' type='time' value='00:00' /></div>";
     }
-    
     out += "<div class='ui-field-contain'>";
       out += "<label for='dawnMode'>Рассвета за:</label>";
       out += "<select name='dawnMode' id='dawnMode'>";
       for(byte i = 0; i <= sizeof(dawnOffsets) - 1; i++){
-       out += "<option value='" + String(i) + "'>" + String(dawnOffsets[i]) + "</option>"; 
+       out += "<option value='" + String(i) + "'>" + String(dawnOffsets[i]) + "</option>";
       }
       out += "</select>";
     out += "</div>";
   out += "</form>";
-  
+
   out += "<script type='text/javascript'>$(document).ready(()=>{syncConfig('/getalarmconfig','/setalarmconfig');});</script>";
-  
+
   responseHtml(out);
 }
 
 void routeSetAlarmConfig(){
-  
+
   for (byte i = 0; i < 7; i++) {
-    
+
     if(http->hasArg("day_"+String(i))){
       alarm[i].state = (http->arg("day_" + String(i)).toInt() > 0);
       saveAlarm(i);
       settChanged = true;
     }
     if(http->hasArg("time_"+String(i))){
-      
+
       alarm[i].time = http->arg("time_" + String(i)).substring(0,2).toInt() * 60 + http->arg("time_" + String(i)).substring(3,5).toInt();
       saveAlarm(i);
       settChanged = true;
     }
   }
-  
+
   if(http->hasArg("dawnMode")){
     dawnMode = http->arg("dawnMode").toInt();
     saveDawnMmode();
     settChanged = true;
   }
-  
+
   routeGetAlarmConfig();
-  
+
 }
 
 void routeGetAlarmConfig() {
@@ -351,10 +350,10 @@ void routeGetAlarmConfig() {
       return http->requestAuthentication();
   }
   #endif
-  
+
   String out = "{";
   int _time;
-    
+
   for (byte i = 0; i < 7; i++) {
     out += (alarm[i].state == true) ? "\"day_"+String(i)+"\":\"1\"," : "\"day_"+String(i)+"\":\"0\",";
     if(alarm[i].time){
@@ -363,12 +362,12 @@ void routeGetAlarmConfig() {
       m = (alarm[i].time%60<10) ? "0" + String(alarm[i].time%60) : String(alarm[i].time%60);
       out += "\"time_"+String(i)+"\":\""+h+":"+m+"\",";
     }else{
-      out += "\"time_"+String(i)+"\":\""+timeClient.getHours()+":"+timeClient.getMinutes()+"\",";
+      out += "\"time_"+String(i)+"\":\""+gettimeStr()+"\",";
     }
   }
 
   out += "\"dawnMode\":\"" + String(dawnMode) + "\"}";
-  
+
   http->send(200, "text/json", out);
 }
 
@@ -376,9 +375,9 @@ void routeGetAlarmConfig() {
  * главная страница
  */
 void routeHome(){
-  
+
   String out;
-  
+
   out = "<form>";
 
       out += "<div class='ui-field-contain'>";
@@ -388,11 +387,11 @@ void routeHome(){
           out += "<option value='1'>Вкл</option>";
         out += "</select>";
       out += "</div>";
-      
+
       out += "<div class='ui-field-contain'>";
         out += "<label for='currentMode'>Режим:</label>";
         out += "<select name='currentMode' id='currentMode' data-mini='true'>";
-          
+
           out += "<option value='0'>Конфетти</option>";
           out += "<option value='1'>Огонь</option>";
           out += "<option value='2'>Радуга вертикальная</option>";
@@ -416,30 +415,31 @@ void routeHome(){
           out += "<option value='20'>Пейнтбол</option>";
           out += "<option value='21'>Спираль</option>";
           out += "<option value='22'>Демо</option>";
-          
+
         out += "</select>";
       out += "</div>";
-      
+
       out += "<div class='ui-field-contain'>";
         out += "<label for='brightness'>Яркость:</label>";
         out += "<input type='range' name='brightness' id='brightness' value='50' min='1' max='255' data-highlight='true'>";
       out += "</div>";
-      
+
       out += "<div class='ui-field-contain'>";
         out += "<label for='speed'>Скорость:</label>";
         out += "<input type='range' name='speed' id='speed' value='50' min='0' max='255' data-highlight='true'>";
       out += "</div>";
-      
+
       out += "<div class='ui-field-contain'>";
         out += "<label for='scale'>Масштаб:</label>";
         out += "<input type='range' name='scale' id='scale' value='50' min='0' max='100' data-highlight='true'>";
       out += "</div>";
-      
-    
+
+
   out += "</form>";
   out += "<script type='text/javascript'>$(()=>{syncConfig('/getconfig','/setconfig');});</script>";
   out += "<br>";
-  out += getTimeStampString();
+  now = time(nullptr);
+  out += String(ctime(&now));
 
   responseHtml(out);
 }

@@ -7,7 +7,12 @@ void parseUDP() {
 
     if (inputBuffer.startsWith("DEB")) {
       if (sendSettings_flag) sendCurrent();
-      else inputBuffer = "OK " + timeClient.getFormattedTime();
+      else {
+        char buf[11];
+        now = time(nullptr);
+        sprintf(buf, "OK %02u:%02u:%02u",localtime(&now)->tm_hour, localtime(&now)->tm_min, localtime(&now)->tm_sec);
+        inputBuffer = String(buf);
+      }
       sendSettings_flag = false;
     } else if (inputBuffer.startsWith("GET")) {
       sendCurrent();
