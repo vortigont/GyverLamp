@@ -75,7 +75,6 @@ struct {
 byte dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};
 byte dawnMode;
 boolean dawnFlag = false;
-long thisTime;
 boolean manualOff = false;
 boolean sendSettings_flag = false;
 
@@ -365,7 +364,7 @@ void loop() {
   parseUDP();
   effectsTick();
   eepromTick();
-  if (timeTimer.isReady()) { timeTick(); }
+  if (timeTimer.isReady() && timeavailable) { alarmTick(); }
   buttonTick();
 
   MDNS.update();
