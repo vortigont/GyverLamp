@@ -33,11 +33,11 @@ void webserver() {
 
     http->begin();
 
-    Serial.printf("Запущен веб сервер по адресу: http://%s.local/\r\n", clientId.c_str());
+    _SPF("Запущен веб сервер по адресу: http://%s.local/\r\n", clientId.c_str());
 
   } else {
 
-    Serial.println("Ошибка создания веб сервера. \r\n");
+    _SPLN("Ошибка создания веб сервера. \r\n");
   }
 
 }
