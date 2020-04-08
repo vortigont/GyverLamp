@@ -112,7 +112,7 @@ struct MQTTconfig {
 bool shouldSaveConfig = false;
 
 void saveConfigCallback () {
-  Serial.println("should save config");
+  _SPLN("should save config");
   shouldSaveConfig = true;
 }
 
@@ -138,9 +138,8 @@ void setup() {
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
 
-  Serial.begin(115200);
-  Serial.println();
-  delay(1000);
+  Serial.begin(BAUD);
+  _SPLN();
 
   EEPROM.begin(512);
 
@@ -166,16 +165,16 @@ void setup() {
 
     WiFi.softAP(AP_NameChar, WiFiPassword);
     IPAddress myIP = WiFi.softAPIP();
-    Serial.print("Access point Mode");
-    Serial.println("AP IP address: ");
-    Serial.println(myIP);
+    _SP("Access point Mode");
+    _SPLN("AP IP address: ");
+    _SPLN(myIP);
     USE_MQTT = false;
 
   } else {  // подключаемся к роутеру
 
     char esp_id[32] = "";
 
-    Serial.print("WiFi manager...");
+    _SP("WiFi manager...");
     sprintf(esp_id, "<br><p> Chip ID: %s </p>", clientId.c_str());
 
     WiFiManager wifiManager;
@@ -207,13 +206,13 @@ void setup() {
       boot_count = 0; EEPROM.write(410, boot_count); EEPROM.commit();
 
       if (!wifiManager.startConfigPortal()) {
-         Serial.println("failed to start config Portal");
+         _SPLN("failed to start config Portal");
       }
     }
 
     if (!wifiManager.autoConnect()) {
       if (!wifiManager.startConfigPortal()) {
-         Serial.println("failed to connect and hit timeout");
+         _SPLN("failed to connect and hit timeout");
       }
     }
 
@@ -225,34 +224,34 @@ void setup() {
       strcpy(mqtt_port, custom_mqtt_port.getValue());
 
       writeMQTTConfig(mqtt_server, mqtt_user, mqtt_password, mqtt_port);
-      Serial.println("MQTT configuration written");
+      _SPLN("MQTT configuration written");
       delay(100);
     };
 
-    Serial.print("connected! IP address: ");
-    Serial.print(WiFi.localIP());
-    Serial.print(". Signal strength: ");
-    Serial.print(2*(WiFi.RSSI()+100));
-    Serial.println("%");
+    _SP("connected! IP address: ");
+    _SP(WiFi.localIP());
+    _SP(". Signal strength: ");
+    _SP(2*(WiFi.RSSI()+100));
+    _SPLN("%");
 
-    Serial.println();
-    Serial.print("MAC: ");
-    Serial.println(WiFi.macAddress());
+    _SPLN();
+    _SP("MAC: ");
+    _SPLN(WiFi.macAddress());
 
     #ifdef DEBUG
-    Serial.print("Free Heap size: ");
-    Serial.print(ESP.getFreeHeap()/1024);
-    Serial.println("Kb");
+    _SP("Free Heap size: ");
+    _SP(ESP.getFreeHeap()/1024);
+    _SPLN("Kb");
     #endif
 
     WiFi.setOutputPower(20);
 
     if (!MDNS.begin(clientId)) {
-        Serial.println("Error setting up MDNS responder!");
+        _SPLN("Error setting up MDNS responder!");
     }
 
     ArduinoOTA.onStart([]() {
-      Serial.println("OTA Start");
+      _SPLN("OTA Start");
       ONflag = true;
       currentMode = 16;
       loadingFlag = true;
@@ -262,28 +261,28 @@ void setup() {
     });
 
     ArduinoOTA.onEnd([]() {
-      Serial.println("OTA End");  //  "Завершение OTA-апдейта"
+      _SPLN("OTA End");  //  "Завершение OTA-апдейта"
     });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
       effectsTick();
-      Serial.printf("Progress: %u%%\n\r", (progress / (total / 100)));
+      _SPF("Progress: %u%%\n\r", (progress / (total / 100)));
     });
 
     ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
+      _SPF("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) _SPLN("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) _SPLN("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) _SPLN("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) _SPLN("Receive Failed");
+      else if (error == OTA_END_ERROR) _SPLN("End Failed");
    });
 
     ArduinoOTA.begin();
   }
 
   Udp.begin(localPort);
-  Serial.printf("UDP server on port %d\n", localPort);
+  _SPF("UDP server on port %d\n", localPort);
 
   // EEPROM
 
@@ -340,13 +339,13 @@ void setup() {
   if ((String(MQTTConfig.HOST) == "none") || (ESP_MODE == 0) || String(MQTTConfig.HOST).length() == 0) {
 
     USE_MQTT = false;
-    Serial.println("Использование MQTT сервера отключено.");
+    _SPLN("Использование MQTT сервера отключено.");
   }
 
    _BTN_CONNECTED = !digitalRead(BTN_PIN);
 
   #ifdef DEBUG
-  _BTN_CONNECTED ? Serial.println("Обнаружена сенсорная кнопка") : Serial.println("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
+  _BTN_CONNECTED ? _SPLN("Обнаружена сенсорная кнопка") : _SPLN("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
   #endif
 
   infoTimer->setOnTimer(&infoCallback);

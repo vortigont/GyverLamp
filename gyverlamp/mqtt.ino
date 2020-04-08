@@ -6,7 +6,7 @@ MQTTconfig readMQTTConfig () {
   for (int i = 0; i < 32; ++i) MQTTConfig.HOST[i]   = char(EEPROM.read(eeAddress + i)); eeAddress += 32;
   for (int i = 0; i < 32; ++i) MQTTConfig.USER[i]   = char(EEPROM.read(eeAddress + i)); eeAddress += 32;
   for (int i = 0; i < 32; ++i) MQTTConfig.PASSWD[i] = char(EEPROM.read(eeAddress + i)); eeAddress += 32;
-  for (int i = 0; i < 10; ++i) MQTTConfig.PORT[i] = char(EEPROM.read(eeAddress + i)); 
+  for (int i = 0; i < 10; ++i) MQTTConfig.PORT[i] = char(EEPROM.read(eeAddress + i));
 
   return MQTTConfig;
 }
@@ -17,13 +17,13 @@ void writeMQTTConfig(const char HOST[32], const char USER[32], const char PASSWD
   for (int i = 0; i < 32; ++i)  EEPROM.write(eeAddress + i, HOST[i]); eeAddress += 32;
   for (int i = 0; i < 32; ++i)  EEPROM.write(eeAddress + i, USER[i]); eeAddress += 32;
   for (int i = 0; i < 32; ++i)  EEPROM.write(eeAddress + i, PASSWD[i]); eeAddress += 32;
-  for (int i = 0; i < 10; ++i)  EEPROM.write(eeAddress + i, PORT[i]); 
+  for (int i = 0; i < 10; ++i)  EEPROM.write(eeAddress + i, PORT[i]);
 
   EEPROM.commit();
 }
 
 int Get_EFFIDX (String effect) {
-  
+
   if (effect.equals("Конфетти")) return 0;
   if (effect.equals("Огонь")) return 1;
   if (effect.equals("Радуга верт.")) return 2;
@@ -81,7 +81,7 @@ String Get_EFFName (int eff_idx) {
 }
 
 void MQTTUpdateState () {
-  
+
    mqttclient.publish(String("homeassistant/light/"+clientId+"/status").c_str(), ONflag ? "ON" : "OFF", true);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/brightness/status").c_str(), String(modes[currentMode].brightness).c_str(), true);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/status").c_str(), Get_EFFName(currentMode).c_str(), true);
@@ -98,31 +98,31 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   String Payload = "";
 
   #ifdef DEBUG
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
+  _SP("Message arrived [");
+  _SP(topic);
+  _SP("] ");
   #endif
 
   for (int i = 0; i < length; i++) Payload += (char)payload[i];
   #ifdef DEBUG
-  Serial.println(Payload);
+  _SPLN(Payload);
   #endif
 
   if (String(topic) == "homeassistant/light/"+clientId+"/switch") {
 
-      Serial.print("Command arrived: ");
-      Serial.println(Payload);
+      _SP("Command arrived: ");
+      _SPLN(Payload);
 
       ONflag = (Payload == "ON") ? true : false;
       changePower();
       sendCurrent();
       MQTTUpdateState();
-      
+
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/brightness/set") {
 
-      Serial.print("Command arrived: brightness "); Serial.println(Payload);
+      _SP("Command arrived: brightness "); _SPLN(Payload);
 
       modes[currentMode].brightness = Payload.toInt();
       FastLED.setBrightness(modes[currentMode].brightness);
@@ -134,18 +134,18 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/set") {
 
-      Serial.print("Command arrived: effect set to "); Serial.println(Payload);
+      _SP("Command arrived: effect set to "); _SPLN(Payload);
 
-      if (Payload == "Демо") { 
+      if (Payload == "Демо") {
 
-          demo = true; 
+          demo = true;
           currentMode = random(0, MODE_AMOUNT-1);
 
           if (!epilepsy) {
-          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);          
+          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);
         }
        } else {
-      
+
           demo = false;
           currentMode = Get_EFFIDX(Payload);
        }
@@ -157,13 +157,13 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
       MQTTUpdateState();
-      
+
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/rgb/set") {
 
-      Serial.print("Command arrived: rgb "); Serial.println(Payload);
-      
+      _SP("Command arrived: rgb "); _SPLN(Payload);
+
       r = getValue(Payload, ',', 0).toInt();
       g = getValue(Payload, ',', 1).toInt();
       b = getValue(Payload, ',', 2).toInt();
@@ -179,7 +179,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/speed/set") {
 
-      Serial.print("Command arrived: speed "); Serial.println(Payload);
+      _SP("Command arrived: speed "); _SPLN(Payload);
 
       modes[currentMode].speed = Payload.toInt();
       saveEEPROM();
@@ -192,10 +192,10 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/scale/set") {
 
-      Serial.print("Command arrived: scale "); Serial.println(Payload);
+      _SP("Command arrived: scale "); _SPLN(Payload);
 
       if (currentMode == 17 && Payload.toInt() > 100) Payload = "100";
-      
+
       modes[currentMode].scale = Payload.toInt();
       saveEEPROM();
       loadingFlag = true;
@@ -222,15 +222,15 @@ void MQTTreconnect() {
       if ((millis() - timing > mqtt_timeout) && !mqttclient.connected()) {
 
           timing = millis();
-          
+
           if (!WiFi.isConnected()) WiFi.reconnect();
-      
-          Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER);
+
+          _SPTO(Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER));
 
           // подключаемся к MQTT серверу
           if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD, String("homeassistant/light/"+clientId+"/state").c_str(), 0,  true, "offline")) {
-          
-            Serial.println("connected!");
+
+            _SPLN("connected!");
             mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
 
             mqtt_timeout = 5000;
@@ -257,14 +257,14 @@ void MQTTreconnect() {
 
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/speed/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/speed/set").c_str());
-          
+
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/set").c_str());
 
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/state").c_str());
 
             MQTTUpdateState();
-          
+
         } else {
 
           mqtt_reconnection_count += 1;
@@ -272,17 +272,17 @@ void MQTTreconnect() {
 
           if (mqtt_reconnection_count >= 9) {
 
-            Serial.println("Сan not establish a connection, resetting ESP...");
+            _SPLN("Сan not establish a connection, resetting ESP...");
             ESP.restart(); //ESP.reset();
 
             //mqtt_timeout = 5000;
             //mqtt_reconnection_count = 0;
-            
+
           }
-          
-          Serial.print("failed, rc=");
-          Serial.print(mqttclient.state());
-          Serial.printf(" try again in %d seconds\n", mqtt_timeout/1000);
+
+          _SP("failed, rc=");
+          _SP(mqttclient.state());
+          _SPF(" try again in %d seconds\n", mqtt_timeout/1000);
         }
       }
     }
@@ -291,7 +291,7 @@ void MQTTreconnect() {
 void HomeAssistantSendDiscoverConfig() {
 
   DynamicJsonDocument hass_discover(1024);
-  
+
   hass_discover["~"] = "homeassistant/light/"+clientId;
   hass_discover["name"] = "Gyver Lamp "+ clientId; // name
   hass_discover["uniq_id"] = String(ESP.getChipId(), HEX); // unique_id
@@ -305,7 +305,7 @@ void HomeAssistantSendDiscoverConfig() {
 
   hass_discover["cmd_t"] = "~/switch"; // command_topic
   hass_discover["stat_t"] = "~/status"; // state_topic
-  
+
   hass_discover["fx_cmd_t"] = "~/effect/set";     // effect_command_topic
   hass_discover["fx_stat_t"] = "~/effect/status"; // effect_state_topic
 
@@ -326,11 +326,15 @@ void HomeAssistantSendDiscoverConfig() {
   hass_discover_str += eff_list;
 
   #ifdef DEBUG
-  //Serial.println(hass_discover_str);
+  //_SPLN(hass_discover_str);
   //mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), "");
   #endif
 
-  mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+  if (mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str(), true)) {
+    _SPLN("Success sent discover message");
+  } else {
+    _SPLN("Error sending discover message");
+  }
 
   // уровень wifi сигнала
   DynamicJsonDocument hass_discover_signal_sensor(1024);
@@ -339,8 +343,8 @@ void HomeAssistantSendDiscoverConfig() {
   hass_discover_signal_sensor["~"] = "homeassistant/sensor/"+clientId+"W";
   hass_discover_signal_sensor["device_class"] = "signal_strength";
   hass_discover_signal_sensor["name"] = "Signal Strength "+clientId;
-  hass_discover_signal_sensor["state_topic"] = "~/WiFi/RSSI_pct";        
-  hass_discover_signal_sensor["unit_of_measurement"] = "%"; 
+  hass_discover_signal_sensor["state_topic"] = "~/WiFi/RSSI_pct";
+  hass_discover_signal_sensor["unit_of_measurement"] = "%";
   hass_discover_signal_sensor["uniq_id"] = "W"+String(ESP.getChipId(), HEX); // unique_id
   hass_discover_signal_sensor["avty_t"] = String("homeassistant/light/"+clientId+"/state");  // availability_topic
   hass_discover_signal_sensor["pl_avail"] = "online";        // payload_available
@@ -356,7 +360,11 @@ void HomeAssistantSendDiscoverConfig() {
 
   hass_discover_signal_sensor_str += dev_reg_s;
 
-  mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/config").c_str(), hass_discover_signal_sensor_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+  if (mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/config").c_str(), hass_discover_signal_sensor_str.c_str(), true) ) {
+    _SPLN("Success sent discover message");
+  }  else {
+    _SPLN("Error sending discover message");
+  }
 
   // Время непрерывной работы
   DynamicJsonDocument hass_discover_uptime_sensor(1024);
@@ -364,9 +372,9 @@ void HomeAssistantSendDiscoverConfig() {
 
   hass_discover_uptime_sensor["~"] = "homeassistant/sensor/"+clientId+"U";
   hass_discover_uptime_sensor["ic"] = "mdi:timer";
-  hass_discover_uptime_sensor["name"] = "Uptime "+clientId; 
-  hass_discover_uptime_sensor["state_topic"] = "~/uptime";        
-  hass_discover_uptime_sensor["unit_of_measurement"] = "s"; 
+  hass_discover_uptime_sensor["name"] = "Uptime "+clientId;
+  hass_discover_uptime_sensor["state_topic"] = "~/uptime";
+  hass_discover_uptime_sensor["unit_of_measurement"] = "s";
   hass_discover_uptime_sensor["uniq_id"] = "U"+String(ESP.getChipId(), HEX); // unique_id
   hass_discover_uptime_sensor["avty_t"] = String("homeassistant/light/"+clientId+"/state");   // availability_topic
   hass_discover_uptime_sensor["pl_avail"] = "online";        // payload_available
@@ -377,18 +385,22 @@ void HomeAssistantSendDiscoverConfig() {
   hass_discover_uptime_sensor_str = hass_discover_uptime_sensor_str.substring(0, hass_discover_uptime_sensor_str.length() - 1);
   hass_discover_uptime_sensor_str += dev_reg_s;
 
-  mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/config").c_str(), hass_discover_uptime_sensor_str.c_str(), true) ? Serial.println("Success sent discover message") : Serial.println("Error sending discover message");
+  if (mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/config").c_str(), hass_discover_uptime_sensor_str.c_str(), true)) {
+    _SPLN("Success sent discover message");
+  } else {
+    _SPLN("Error sending discover message");
+  }
 
 }
 
 void infoCallback() {
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/uptime").c_str(), String(millis()/1000).c_str(), true);
-    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI").c_str(), String(WiFi.RSSI()).c_str(), true);    
-    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI_pct").c_str(), String(2*(WiFi.RSSI()+100)).c_str(), true);    
-    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/channel").c_str(), String(WiFi.channel()).c_str(), true);    
-    mqttclient.publish(String("homeassistant/light/"+clientId+"/ResetReason").c_str(), String(ESP.getResetReason()).c_str(), true);    
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI").c_str(), String(WiFi.RSSI()).c_str(), true);
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI_pct").c_str(), String(2*(WiFi.RSSI()+100)).c_str(), true);
+    mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/channel").c_str(), String(WiFi.channel()).c_str(), true);
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/ResetReason").c_str(), String(ESP.getResetReason()).c_str(), true);
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"/VCC").c_str(), String((float)ESP.getVcc()/1000.0f).c_str(), true);
-    mqttclient.publish(String("homeassistant/light/"+clientId+"/BootCount").c_str(), String(boot_count).c_str(), true);    
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/BootCount").c_str(), String(boot_count).c_str(), true);
     mqttclient.publish(String("homeassistant/light/"+clientId+"/DemoMode").c_str(), String(demo).c_str(), true);
 
     if (boot_count > 1) { boot_count = 0; EEPROM.write(410, boot_count); EEPROM.commit(); }
@@ -397,19 +409,19 @@ void infoCallback() {
 
 void demoCallback() {
 
-    if (demo) { 
+    if (demo) {
 
       currentMode = random(0, MODE_AMOUNT-1);
       if (!epilepsy) {
-          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);          
+          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);
         }
-      
+
       loadingFlag = true;
       FastLED.clear();
       delay(1);
       sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
       MQTTUpdateState();
-   } 
+   }
 
 }

@@ -36,7 +36,7 @@ bool checkDawn(const tm* tm) {
       if (manualOff) return false;
       // секунд от начала рассвета
       int16_t dawnPosition = (thisTime - alarm[thisDay].time - dawnOffsets[dawnMode])*60 + tm->tm_sec;
-      Serial.print("dawnPosition: "); Serial.println(dawnPosition);
+      _SP("dawnPosition: "); _SPLN(dawnPosition);
       // вычисляем цвет рассвета на текущую секунду
       dawnColor = CHSV(map(dawnPosition, 1, 60*dawnOffsets[dawnMode], 10, 35),
                        map(dawnPosition, 1, 60*dawnOffsets[dawnMode], 255, 170),

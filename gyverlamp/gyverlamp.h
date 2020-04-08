@@ -12,6 +12,8 @@
 
 #define NTP_SERVER COUNTRY ".pool.ntp.org"
 
+#define BAUD                115200  // serial speed
+
 // NTP time
 #include <coredecls.h>                  // settimeofday_cb()
 #include <TZ.h>
