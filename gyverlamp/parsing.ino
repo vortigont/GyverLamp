@@ -1,4 +1,5 @@
 void parseUDP() {
+  bool update = false;
   int packetSize = Udp.parsePacket();
   if (packetSize) {
     int n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
@@ -27,8 +28,7 @@ void parseUDP() {
     } else if (inputBuffer.startsWith("BRI")) {
       modes[currentMode].brightness = inputBuffer.substring(3).toInt();
       FastLED.setBrightness(modes[currentMode].brightness);
-      settChanged = true;
-      eepromTimer = millis();
+      update = true;
     } else if (inputBuffer.startsWith("SPD")) {
       modes[currentMode].speed = inputBuffer.substring(3).toInt();
       loadingFlag = true;
@@ -37,8 +37,7 @@ void parseUDP() {
     } else if (inputBuffer.startsWith("SCA")) {
       modes[currentMode].scale = inputBuffer.substring(3).toInt();
       loadingFlag = true;
-      settChanged = true;
-      eepromTimer = millis();
+      update = true;
     } else if (inputBuffer.startsWith("P_ON")) {
       ONflag = true;
       changePower();
@@ -79,7 +78,12 @@ void parseUDP() {
     Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
     Udp.write(reply);
     Udp.endPacket();
-    MQTTUpdateState();
+
+    if ( update ) {
+      settChanged = true;
+      eepromTimer = millis();
+      MQTTUpdateState();
+    }
   }
 }
 
