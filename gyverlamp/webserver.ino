@@ -340,7 +340,7 @@ void routeSetAlarmConfig(){
   }
 
   routeGetAlarmConfig();
-
+  checkDawn();
 }
 
 void routeGetAlarmConfig() {

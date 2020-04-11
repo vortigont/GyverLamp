@@ -16,7 +16,7 @@
 #include "Globals.h"
 #include "gyverlamp.h"
 
-#include "timerMinim.h"
+#include <Ticker.h>
 #include <FastLED.h>
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
@@ -38,8 +38,8 @@
 
 CRGB leds[NUM_LEDS];
 WiFiUDP Udp;
-timerMinim timeTimer(1000);
-timerMinim timeStrTimer(120);
+Ticker tickerAlarm;       // alarm checker
+Ticker tickerScroller;    // scheduler for text scroller
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 ESP8266HTTPUpdateServer *httpUpdater;
@@ -75,7 +75,7 @@ struct {
 byte dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};
 byte dawnMode;
 boolean dawnFlag = false;
-boolean manualOff = false;
+boolean manualOff = false;        // alarm override
 boolean sendSettings_flag = false;
 
 int8_t currentMode = 0;
@@ -90,7 +90,6 @@ boolean settChanged = false;
 unsigned char matrixValue[WIDTH][HEIGHT];
 String lampIP = "";
 static time_t now;
-bool timeavailable = 0;       // timesync status
 
 WiFiClient espClient;
 PubSubClient mqttclient(espClient);
@@ -124,8 +123,8 @@ byte mac[6];
 
 ADC_MODE (ADC_VCC);
 
-Timer *infoTimer = new Timer(DEFAULT_TIMER);
-Timer *demoTimer = new Timer(DEFAULT_TIMER); //  время переключения эффектов в "Демо" режиме
+Timer *infoTimer = new Timer(TIMER_MQTT); //  время обновления статусов MQTT
+Timer *demoTimer = new Timer(TIMER_DEMO); //  время переключения эффектов в "Демо" режиме
 
 void setup() {
 
@@ -238,7 +237,7 @@ void setup() {
     _SP("MAC: ");
     _SPLN(WiFi.macAddress());
 
-    #ifdef DEBUG
+    #ifdef _DEBUG_
     _SP("Free Heap size: ");
     _SP(ESP.getFreeHeap()/1024);
     _SPLN("Kb");
@@ -363,7 +362,6 @@ void loop() {
   parseUDP();
   effectsTick();
   eepromTick();
-  if (timeTimer.isReady() && timeavailable) { alarmTick(); }
   buttonTick();
 
   MDNS.update();
@@ -403,5 +401,4 @@ void onSTAGotIP(WiFiEventStationModeGotIP ipInfo) {
 // station disconnect
 void onSTADisconnec(WiFiEventStationModeDisconnected event_info) {
     sntp_stop();              // disable NTP updates on station disconnect
-    timeavailable=0;
 }

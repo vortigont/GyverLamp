@@ -2,8 +2,9 @@ uint32_t effTimer;
 bool stop_eff = false;
 
 void effectsTick() {
-  if (!dawnFlag) {
-    if (!stop_eff && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
+  if (dawnFlag || stop_eff) return;
+
+  if (millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
       effTimer = millis();
       switch (currentMode) {
         case 0: sparklesRoutine();
@@ -52,13 +53,12 @@ void effectsTick() {
           break;
       }
       FastLED.show();
-    }
   }
 }
 
 void changePower() {
   if (ONflag && !stop_eff) return;
-  
+
   if (ONflag) {
     // Включение
     stop_eff = false;
@@ -72,7 +72,7 @@ void changePower() {
     FastLED.setBrightness(modes[currentMode].brightness);
     delay(2);
     FastLED.show();
-    
+
   } else {
     // Выключение
     int steps = 1 + round(modes[currentMode].brightness / 40);
@@ -89,7 +89,7 @@ void changePower() {
     FastLED.show();
   }
 
-  // записываем статус лампы в память 
+  // записываем статус лампы в память
   EEPROM.write(420, ONflag); EEPROM.commit();
-  
+
 }

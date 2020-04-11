@@ -66,6 +66,7 @@ void parseUDP() {
       }
       saveAlarm(alarmNum);
       manualOff = false;
+      checkDawn();
     } else if (inputBuffer.startsWith("ALM_GET")) {
       sendAlarms();
     } else if (inputBuffer.startsWith("DAWN")) {
