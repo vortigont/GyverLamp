@@ -40,6 +40,8 @@ CRGB leds[NUM_LEDS];
 WiFiUDP Udp;
 Ticker tickerAlarm;       // alarm checker
 Ticker tickerScroller;    // scheduler for text scroller
+Ticker tickerEffects;     // effects updater
+Ticker tickerTrigger;     // onetime trigger
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 ESP8266HTTPUpdateServer *httpUpdater;
@@ -256,7 +258,7 @@ void setup() {
       loadingFlag = true;
       FastLED.clear();
       FastLED.setBrightness(modes[currentMode].brightness);
-
+      //tickerEffects.scheduled(effectGetUpdRate(currentMode),  effectsTick());  // trigger Dawn checker
     });
 
     ArduinoOTA.onEnd([]() {
@@ -264,7 +266,6 @@ void setup() {
     });
 
     ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-      effectsTick();
       _SPF("Progress: %u%%\n\r", (progress / (total / 100)));
     });
 
@@ -343,9 +344,11 @@ void setup() {
 
    _BTN_CONNECTED = !digitalRead(BTN_PIN);
 
-  #ifdef DEBUG
-  _BTN_CONNECTED ? _SPLN("Обнаружена сенсорная кнопка") : _SPLN("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
-  #endif
+  if (_BTN_CONNECTED) {
+    _SPLN("Обнаружена сенсорная кнопка");
+  } else {
+    _SPLN("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
+  }
 
   infoTimer->setOnTimer(&infoCallback);
   infoTimer->Start();
@@ -360,7 +363,6 @@ void loop() {
   demoTimer->Update();
 
   parseUDP();
-  effectsTick();
   eepromTick();
   buttonTick();
 

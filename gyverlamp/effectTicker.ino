@@ -1,11 +1,77 @@
-uint32_t effTimer;
-bool stop_eff = false;
+#include "effectsTicker.h"
+
+/*
+ * lampfade - lamp power fade-in, fade-out call-back
+ * incrementaly fades lamp brightness
+ * @param bool fade - fade 1 -in, 0 -out
+ *
+ */
+class FaderSingleTone {
+  // private
+  CFastLED _led;
+  uint8_t _steps, _maxbrt;
+  uint32_t _timeout;
+  bool _fade;
+  FaderSingleTone* pInstance = nullptr;
+  Ticker _fadeTicker;
+
+  FaderSingleTone(CFastLED &led, bool fade, uint8_t brightness, uint32_t timeout=FADE_TIMEOUT) :
+      _led(led), _fade(fade), _steps(brightness), _timeout(timeout) {
+      if ( _fade ) _maxbrt = _steps;
+      attach(round(_timeout/_steps));
+  }
+
+public:
+  ~FaderSingleTone() {;};
+
+  void fader() {
+      --pInstance->_steps;
+      _led->setBrightness(_fade ? _maxbrt - _steps : _steps);
+      _led->show();
+      if ( pInstance->_steps == 0 ) {
+          detach();
+      }
+  }
+
+  bool attach(uint32_t period) {
+      _fadeTicker.attach_ms(period, std::bind(&FaderSingleTone::fader, this));
+      return _fadeTicker.active();
+  }
+
+  bool detach() {
+      if (_fadeTicker.active()) {
+          _fadeTicker.detach();
+      }
+      return _fadeTicker.active();
+  }
+
+  const inline bool isAttached() const { return _fadeTicker.active(); };
+
+  static FaderSingleTone& getInstance() {
+        return &pInstance;
+  }
+
+  static FaderSingleTone& getInstance(CFastLED &led, bool fade, uint8_t brightness, uint32_t timeout=FADE_TIMEOUT) {
+    if (pInstance == nullptr) {
+        pInstance = new FaderSingleTone(led, fade, brightness, timeout=FADE_TIMEOUT);
+    }
+    return &pInstance;
+  }
+};
+
+/*
+  *  effectGettimer - calculates timer value for particular effect
+  * @param uint8_t id - effect number id out of all available confgurations
+  * @return uint32_t effect update rate in ms
+ */
+uint32_t effectGetUpdRate(uint8_t id){
+  return (id < 5 || id > 13) ? modes[id].speed : SPEED_NOISE;
+}
+
 
 void effectsTick() {
-  if (dawnFlag || stop_eff) return;
+  if (dawnFlag ) return;
 
-  if (millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
-      effTimer = millis();
       switch (currentMode) {
         case 0: sparklesRoutine();
           break;
@@ -53,43 +119,28 @@ void effectsTick() {
           break;
       }
       FastLED.show();
-  }
 }
 
 void changePower() {
-  if (ONflag && !stop_eff) return;
+  if (ONflag && ! tickerEffects.active()) return;
 
   if (ONflag) {
     // Включение
-    stop_eff = false;
-    int steps = 1 + round(modes[currentMode].brightness / 80);
-    for (int i = 0; i <= modes[currentMode].brightness; i += steps) {
-      FastLED.setBrightness(i);
-      effectsTick();
-      delay(2);
-      FastLED.show();
-    }
-    FastLED.setBrightness(modes[currentMode].brightness);
-    delay(2);
-    FastLED.show();
-
+    //stop_eff = false;
+      tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);
   } else {
     // Выключение
-    int steps = 1 + round(modes[currentMode].brightness / 40);
-    for (int i = modes[currentMode].brightness; i >= 0; i -= steps) {
-      FastLED.setBrightness(i);
-      effectsTick();
-      delay(2);
-      FastLED.show();
-    }
-
-    stop_eff = true;
-    FastLED.clear();
-    delay(2);
-    FastLED.show();
+    tickerTrigger.once_ms_scheduled(FADE_TIMEOUT, powerdown);
   }
 
+  FaderSingleTone::getInstance().attach(FastLED, ONflag, modes[currentMode].brightness, FADE_TIMEOUT);
+
+}
+
+void powerdown() {
+  tickerEffects.detach();
+  FastLED.clear();
+  FastLED.show();
   // записываем статус лампы в память
   EEPROM.write(420, ONflag); EEPROM.commit();
-
 }
