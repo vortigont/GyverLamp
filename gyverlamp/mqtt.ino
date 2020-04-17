@@ -1,3 +1,6 @@
+#include "mqtt.h"
+
+uint8_t mqtt_reconnection_count = 0;
 
 MQTTconfig readMQTTConfig () {
   int eeAddress = 300;
@@ -81,7 +84,10 @@ String Get_EFFName (int eff_idx) {
 }
 
 void MQTTUpdateState () {
+   if (! USE_MQTT) return;
+   if (! mqttclient.connected()) { tickerMQTT.once_scheduled(0,MQTTreconnect); return;}
 
+   _SPLN("MQTT Update state");
    mqttclient.publish(String("homeassistant/light/"+clientId+"/status").c_str(), ONflag ? "ON" : "OFF", true);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/brightness/status").c_str(), String(modes[currentMode].brightness).c_str(), true);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/effect/status").c_str(), Get_EFFName(currentMode).c_str(), true);
@@ -91,22 +97,17 @@ void MQTTUpdateState () {
    char sRGB[15];
    sprintf(sRGB, "%d,%d,%d", r, g, b);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB, true);
-
 }
 
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {
   String Payload = "";
 
-  #ifdef DEBUG
   _SP("Message arrived [");
   _SP(topic);
   _SP("] ");
-  #endif
 
   for (int i = 0; i < length; i++) Payload += (char)payload[i];
-  #ifdef DEBUG
   _SPLN(Payload);
-  #endif
 
   if (String(topic) == "homeassistant/light/"+clientId+"/switch") {
 
@@ -207,86 +208,53 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
 }
 
-uint32_t timing = 0;
-uint32_t mqtt_timeout = 5000;
-uint8_t mqtt_reconnection_count = 0;
 
 void MQTTreconnect() {
-  if (USE_MQTT && (millis() - timing > mqtt_timeout)) {
-
       MQTTconfig MQTTConfig = readMQTTConfig();
 
       mqttclient.setServer(MQTTConfig.HOST, String(MQTTConfig.PORT).toInt());
       mqttclient.setCallback(MQTTcallback);
 
-      if ((millis() - timing > mqtt_timeout) && !mqttclient.connected()) {
+      _SPTO(Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER));
 
-          timing = millis();
-
-          if (!WiFi.isConnected()) WiFi.reconnect();
-
-          _SPTO(Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER));
-
-          // подключаемся к MQTT серверу
-          if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD, String("homeassistant/light/"+clientId+"/state").c_str(), 0,  true, "offline")) {
-
+      // подключаемся к MQTT серверу
+      if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD, String("homeassistant/light/"+clientId+"/state").c_str(), 0,  true, "online")) {
             _SPLN("connected!");
-            mqttclient.publish(String("homeassistant/light/"+clientId+"/state").c_str(), "online", true);
-
-            mqtt_timeout = 5000;
             mqtt_reconnection_count = 0;
 
-            #ifdef DEBUG
-            //mqttclient.subscribe(String("homeassistant/light/"+clientId+"/config").c_str());
-            #endif
-
-            HomeAssistantSendDiscoverConfig();
+            // ehhh, this madness should be refactored
+            //HomeAssistantSendDiscoverConfig();
 
             // подписываемся на топики
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/switch").c_str());
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/status").c_str());
-
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/brightness/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/brightness/set").c_str());
-
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/set").c_str());
-
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/rgb/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/rgb/set").c_str());
-
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/speed/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/speed/set").c_str());
-
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/status").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/set").c_str());
 
-            mqttclient.subscribe(String("homeassistant/light/"+clientId+"/state").c_str());
-
             MQTTUpdateState();
+            infoCallback();
+            tickerMQTT.attach_scheduled(TIMER_MQTT, infoCallback);
+      } else {
 
-        } else {
-
-          mqtt_reconnection_count += 1;
-          mqtt_timeout *= 2;
-
-          if (mqtt_reconnection_count >= 9) {
-
-            _SPLN("Сan not establish a connection, resetting ESP...");
-            ESP.restart(); //ESP.reset();
+          if (mqtt_reconnection_count == MQTT_RECONNECT_ATTEMPTS) {
+            mqtt_reconnection_count = 0;
+            //_SPLN("Сan not establish a connection, resetting ESP...");
+            //ESP.restart();         // not sure that ESP restart because of dead MQTT is a good idea
 
             //mqtt_timeout = 5000;
             //mqtt_reconnection_count = 0;
-
           }
+
+          ++mqtt_reconnection_count;
 
           _SP("failed, rc=");
           _SP(mqttclient.state());
-          _SPF(" try again in %d seconds\n", mqtt_timeout/1000);
-        }
+          _SPF(" try again in %d seconds\n", 2<<mqtt_reconnection_count);
+          tickerMQTT.once_scheduled(2 << mqtt_reconnection_count, MQTTreconnect);
       }
-    }
-  }
+}
 
 void HomeAssistantSendDiscoverConfig() {
 
@@ -394,6 +362,9 @@ void HomeAssistantSendDiscoverConfig() {
 }
 
 void infoCallback() {
+    if (! USE_MQTT) return;
+    if (! mqttclient.connected()) { tickerMQTT.once_scheduled(0,MQTTreconnect); return;}
+
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/uptime").c_str(), String(millis()/1000).c_str(), true);
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI").c_str(), String(WiFi.RSSI()).c_str(), true);
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI_pct").c_str(), String(2*(WiFi.RSSI()+100)).c_str(), true);
@@ -404,7 +375,6 @@ void infoCallback() {
     mqttclient.publish(String("homeassistant/light/"+clientId+"/DemoMode").c_str(), String(demo).c_str(), true);
 
     if (boot_count > 1) { boot_count = 0; EEPROM.write(410, boot_count); EEPROM.commit(); }
-
 }
 
 void demoCallback() {

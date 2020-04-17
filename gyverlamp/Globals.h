@@ -27,10 +27,10 @@
 
 // Enable Serial.print aliases if _DEBUG_ is defined
 #ifdef _DEBUG_
-  #define _SP(a) Serial.print(a);
-  #define _SPLN(a) Serial.println(a);
-  #define _SPF(a,b) Serial.printf(a,b);
-  #define _SPTO(a) a;
+  #define _SP(a) Serial.print(a)
+  #define _SPLN(a) Serial.println(a)
+  #define _SPF(a,b) Serial.printf(a,b)
+  #define _SPTO(a) a
 #else
   #define _SP(a)
   #define _SPLN(a)

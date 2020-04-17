@@ -8,8 +8,8 @@
 #define DEFAULT_BRIGHNESS   50
 #define DEFAULT_SPEED       30
 #define DEFAULT_SCALE       40
-#define TIMER_DEMO       60000   //msec, время переключения эффектов в "Демо" режиме
-#define TIMER_MQTT       60000   //msec, время обновления статусов MQTT
+#define TIMER_DEMO          60   // sec, время переключения эффектов в "Демо" режиме
+#define TIMER_MQTT          60   // sec, время обновления статусов MQTT
 
 
 #define NTP_SERVER COUNTRY ".pool.ntp.org"

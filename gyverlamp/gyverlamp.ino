@@ -40,6 +40,7 @@ CRGB leds[NUM_LEDS];
 WiFiUDP Udp;
 Ticker tickerAlarm;       // alarm checker
 Ticker tickerScroller;    // scheduler for text scroller
+Ticker tickerMQTT;        // scheduler for MQTT tasks
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 ESP8266HTTPUpdateServer *httpUpdater;
@@ -98,7 +99,7 @@ PubSubClient mqttclient(espClient);
 String clientId = "ESP-"+String(ESP.getChipId(), HEX);
 //String clientId = "ESP-8266";
 
-bool USE_MQTT = true; // используем  MQTT?
+bool USE_MQTT = false;      //  no MQTT until WiFi connects
 bool _BTN_CONNECTED = true;
 
 struct MQTTconfig {
@@ -123,7 +124,6 @@ byte mac[6];
 
 ADC_MODE (ADC_VCC);
 
-Timer *infoTimer = new Timer(TIMER_MQTT); //  время обновления статусов MQTT
 Timer *demoTimer = new Timer(TIMER_DEMO); //  время переключения эффектов в "Демо" режиме
 
 void setup() {
@@ -319,9 +319,6 @@ void setup() {
   currentMode = (int8_t)EEPROM.read(200);
   FastLED.setBrightness(modes[currentMode].brightness);
 
-  // отправляем настройки
-  sendSettings();
-
   memset(matrixValue, 0, sizeof(matrixValue));
 
   randomSeed(micros());
@@ -335,20 +332,13 @@ void setup() {
 
   MQTTconfig MQTTConfig = readMQTTConfig();
 
-  if ((String(MQTTConfig.HOST) == "none") || (ESP_MODE == 0) || String(MQTTConfig.HOST).length() == 0) {
+  _BTN_CONNECTED = !digitalRead(BTN_PIN);
 
-    USE_MQTT = false;
-    _SPLN("Использование MQTT сервера отключено.");
+  if ( _BTN_CONNECTED ) {
+     _SPLN("Обнаружена сенсорная кнопка"); }
+  else {
+    _SPLN("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
   }
-
-   _BTN_CONNECTED = !digitalRead(BTN_PIN);
-
-  #ifdef DEBUG
-  _BTN_CONNECTED ? _SPLN("Обнаружена сенсорная кнопка") : _SPLN("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
-  #endif
-
-  infoTimer->setOnTimer(&infoCallback);
-  infoTimer->Start();
 
   demoTimer->setOnTimer(&demoCallback);
   demoTimer->Start();
@@ -356,7 +346,6 @@ void setup() {
 }
 
 void loop() {
-  infoTimer->Update();
   demoTimer->Update();
 
   parseUDP();
@@ -367,8 +356,7 @@ void loop() {
   MDNS.update();
   http->handleClient();
 
-  if (USE_MQTT && !mqttclient.connected()) MQTTreconnect();
-  if (USE_MQTT) mqttclient.loop();
+  if (USE_MQTT && mqttclient.connected()) mqttclient.loop();
 
   ArduinoOTA.handle();
 }
@@ -396,9 +384,19 @@ int eeGetInt(int pos) {
 // station aquired IP
 void onSTAGotIP(WiFiEventStationModeGotIP ipInfo) {
   sntp_init();    // start ntp updates
+  MQTTconfig MQTTConfig = readMQTTConfig();
+  if ((String(MQTTConfig.HOST) == "none") || String(MQTTConfig.HOST).length() == 0) {
+    USE_MQTT = false;
+    _SPLN("Использование MQTT сервера отключено.");
+  } else {
+    USE_MQTT = true;
+    tickerMQTT.once_scheduled(0,MQTTreconnect);
+  }
 }
 
 // station disconnect
 void onSTADisconnec(WiFiEventStationModeDisconnected event_info) {
     sntp_stop();              // disable NTP updates on station disconnect
+    tickerMQTT.detach();        // disable MQTT processing on WiFi disconnect
+    USE_MQTT = false;
 }

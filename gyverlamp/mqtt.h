@@ -1,0 +1,4 @@
+#pragma once
+
+#define MQTT_RECONNECT_TIMEOUT 5000
+#define MQTT_RECONNECT_ATTEMPTS 10
