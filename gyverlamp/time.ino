@@ -4,7 +4,7 @@ CHSV dawnColor;
     timeset - callback вызывается при установке времени
 */
 void timeset(){
-  tickerAlarm.once_scheduled(1,  checkDawn);  // trigger Dawn checker
+  tickerAlarm.once_scheduled(0,  checkDawn);  // trigger Dawn checker
 }
 
 /*
@@ -25,6 +25,7 @@ String gettimeStr() {
 }
 
 void checkDawn() {
+  if (ONflag) tickerAlarm.detach();     // disable alarm scheduler while lamp is powered on
   now = time(nullptr);
   const tm* tm = localtime(&now);
   byte thisDay = tm->tm_wday;
@@ -54,7 +55,6 @@ void checkDawn() {
       if (! tickerScroller.active()) {
         tickerScroller.attach_ms_scheduled(TIMER_SCROLLER, textScroller);
         FastLED.setBrightness(255);
-        dawnFlag = true;
       }
       tickerAlarm.once_scheduled(1,  checkDawn);    // tick every second while dawn
   } else {

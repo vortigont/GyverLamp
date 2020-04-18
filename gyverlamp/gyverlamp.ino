@@ -31,7 +31,6 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
-#include <Timer.h>
 #include "fonts.h"
 
 // ------------------- ТИПЫ --------------------
@@ -41,6 +40,9 @@ WiFiUDP Udp;
 Ticker tickerAlarm;       // alarm checker
 Ticker tickerScroller;    // scheduler for text scroller
 Ticker tickerMQTT;        // scheduler for MQTT tasks
+Ticker tickerDemo;        // scheduler for Demo task
+Ticker tickerEffects;     // scheduler for Effects task
+Ticker tickerHelper;     // scheduler helper
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 ESP8266HTTPUpdateServer *httpUpdater;
@@ -65,7 +67,6 @@ byte g = 255;
 byte b = 255;
 
 byte boot_count = 0;
-bool demo = false;
 bool epilepsy = false; // отключает эффект "смена цвета" в демо режиме если задано false.
 
 struct {
@@ -77,7 +78,6 @@ byte dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};
 byte dawnMode;
 boolean dawnFlag = false;
 boolean manualOff = false;        // alarm override
-boolean sendSettings_flag = false;
 
 int8_t currentMode = 0;
 boolean loadingFlag = true;
@@ -124,8 +124,6 @@ byte mac[6];
 
 ADC_MODE (ADC_VCC);
 
-Timer *demoTimer = new Timer(TIMER_DEMO); //  время переключения эффектов в "Демо" режиме
-
 void setup() {
 
   // ЛЕНТА
@@ -151,6 +149,7 @@ void setup() {
 
   // читаем статус лампы
   ONflag = EEPROM.read(420);
+  _SP("Power status: "); _SPLN(ONflag);
 
   // Wi-Fi
   static WiFiEventHandler e1, e2;
@@ -237,11 +236,9 @@ void setup() {
     _SP("MAC: ");
     _SPLN(WiFi.macAddress());
 
-    #ifdef _DEBUG_
     _SP("Free Heap size: ");
     _SP(ESP.getFreeHeap()/1024);
     _SPLN("Kb");
-    #endif
 
     WiFi.setOutputPower(20);
 
@@ -340,16 +337,14 @@ void setup() {
     _SPLN("Cенсорная кнопка не обнаружена, управление сенсорной кнопкой отключено");
   }
 
-  demoTimer->setOnTimer(&demoCallback);
-  demoTimer->Start();
-
+  if (ONflag) {
+      tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);
+  }
 }
 
 void loop() {
-  demoTimer->Update();
 
   parseUDP();
-  effectsTick();
   eepromTick();
   buttonTick();
 

@@ -1,12 +1,9 @@
-uint32_t effTimer;
-bool stop_eff = false;
+#include "effectsTicker.h"
 
 void effectsTick() {
-  if (dawnFlag || stop_eff) return;
+  if (dawnFlag) return;
 
-  if (millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].speed : 50) ) {
-      effTimer = millis();
-      switch (currentMode) {
+  switch (currentMode) {
         case 0: sparklesRoutine();
           break;
         case 1: fireRoutine();
@@ -51,45 +48,60 @@ void effectsTick() {
           break;
         case 21: spiroRoutine();
           break;
-      }
-      FastLED.show();
   }
+  FastLED.show();
 }
 
-void changePower() {
-  if (ONflag && !stop_eff) return;
+void changePower(bool power) {
 
-  if (ONflag) {
+  if (power) {
     // Включение
-    stop_eff = false;
+    tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);  // start effects scheduler
     int steps = 1 + round(modes[currentMode].brightness / 80);
     for (int i = 0; i <= modes[currentMode].brightness; i += steps) {
       FastLED.setBrightness(i);
-      effectsTick();
       delay(2);
       FastLED.show();
     }
     FastLED.setBrightness(modes[currentMode].brightness);
-    delay(2);
-    FastLED.show();
-
   } else {
     // Выключение
     int steps = 1 + round(modes[currentMode].brightness / 40);
     for (int i = modes[currentMode].brightness; i >= 0; i -= steps) {
       FastLED.setBrightness(i);
-      effectsTick();
       delay(2);
       FastLED.show();
     }
 
-    stop_eff = true;
-    FastLED.clear();
-    delay(2);
-    FastLED.show();
+    tickerEffects.detach();   // stop effects scheduler
+    tickerAlarm.once_ms_scheduled(0,  checkDawn);  // start Dawn checker scheduler while lamp is off
+    tickerHelper.once_ms_scheduled(effectGetUpdRate(currentMode), [](){    FastLED.clear(); FastLED.show();});
   }
 
   // записываем статус лампы в память
-  EEPROM.write(420, ONflag); EEPROM.commit();
+  EEPROM.write(420, power); EEPROM.commit();
 
+}
+
+
+void demoCallback() {
+
+      currentMode = random(0, MODE_AMOUNT-1);
+      if (!epilepsy) {
+          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);
+        }
+
+      loadingFlag = true;
+      FastLED.clear();
+      FastLED.setBrightness(modes[currentMode].brightness);
+      MQTTUpdateState();
+}
+
+/*
+  *  effectGettimer - calculates timer value for particular effect
+  * @param uint8_t id - effect number id out of all available confgurations
+  * @return uint32_t effect update rate in ms
+ */
+uint32_t effectGetUpdRate(uint8_t id){
+  return (id < 5 || id > 13) ? SPEED_MIN - modes[id].speed : SPEED_NOISE;
 }

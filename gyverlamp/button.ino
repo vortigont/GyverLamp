@@ -9,31 +9,22 @@ void buttonTick() {
 
   touch.tick();
   if (touch.isSingle()) {
-    demo = false;
+    _SPLN("BTN:single");
+    tickerDemo.detach();
     if (dawnFlag) {
       manualOff = true;
       dawnFlag = false;
       loadingFlag = true;
       FastLED.setBrightness(modes[currentMode].brightness);
-      changePower();
-      MQTTUpdateState();
     } else {
-      if (ONflag) {
-        ONflag = false;
-        changePower();
-        MQTTUpdateState();
-      } else {
-        ONflag = true;
-        changePower();
-        MQTTUpdateState();
-      }
-      sendSettings_flag = true;
-      MQTTUpdateState();
+      ONflag = !ONflag;
+      changePower(ONflag);
     }
+    MQTTUpdateState();
   }
 
   if (ONflag && touch.isDouble()) {
-    demo = false;
+    _SPLN("BTN:double");
     if (++currentMode >= MODE_AMOUNT) currentMode = 0;
     FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
@@ -41,12 +32,11 @@ void buttonTick() {
     eepromTimer = millis();
     FastLED.clear();
     delay(1);
-    sendSettings_flag = true;
     MQTTUpdateState();
   }
 
 if (ONflag && touch.isTriple()) {
-    demo = false;
+   _SPLN("BTN:triple");
     if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
     FastLED.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
@@ -55,7 +45,6 @@ if (ONflag && touch.isTriple()) {
     FastLED.clear();
     delay(1);
     MQTTUpdateState();
-    sendSettings_flag = true;
   }
 
  // вывод IP на лампу
@@ -72,8 +61,9 @@ if (ONflag && touch.isTriple()) {
   if (ONflag && touch.isHolded()) {
     brightDirection = !brightDirection;
   }
-  
+
   if (ONflag && touch.isStep()) {
+    _SPLN("BTN:step");
     if (brightDirection) {
       if (modes[currentMode].brightness < 10) modes[currentMode].brightness += 1;
       else if (modes[currentMode].brightness < 250) modes[currentMode].brightness += 5;
@@ -86,7 +76,6 @@ if (ONflag && touch.isTriple()) {
     FastLED.setBrightness(modes[currentMode].brightness);
     settChanged = true;
     eepromTimer = millis();
-    sendSettings_flag = true;
     MQTTUpdateState();
   }
 }

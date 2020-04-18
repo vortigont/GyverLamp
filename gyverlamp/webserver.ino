@@ -215,7 +215,7 @@ void routeSetConfig() {
 
     ONflag = (http->arg("on").toInt() > 0) ? true : false;
     settChanged = true;
-    changePower();
+    changePower(ONflag);
     sendCurrent();
 
   }
@@ -229,11 +229,11 @@ void routeSetConfig() {
 
     if (currentMode == 22) {
 
-      demo = true;
-      currentMode = random(0, MODE_AMOUNT-1);
+      tickerDemo.attach_scheduled(TIMER_DEMO, demoCallback);
+      demoCallback();
     } else {
 
-      demo = false;
+      tickerDemo.detach();
       currentMode =  value.toInt();
       if (currentMode >= MODE_AMOUNT || currentMode < 0) currentMode = 0;
     }
@@ -263,10 +263,12 @@ void routeSetConfig() {
   }
 
   if(http->hasArg("brightness")){
-    ONflag = true;
     modes[currentMode].brightness = http->arg("brightness").toInt();
-    changePower();
     FastLED.setBrightness(modes[currentMode].brightness);
+    if (!ONflag) {
+      ONflag = true;
+      changePower(ONflag);
+    }
 
     sendCurrent();
     settChanged = true;
@@ -279,7 +281,7 @@ void routeSetConfig() {
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
-
+    tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);
   }
 
   /** в знак завершения операции отправим текущую конфигурацию */

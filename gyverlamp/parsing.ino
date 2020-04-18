@@ -1,51 +1,64 @@
+/*
+  Not sure why app accepts two types of messages for DEB replies:
+  CURR - with current lamp configuration
+  OK - timestamp heartbeats
+  since udp requests are unidirectional, we have no way to upate app about CFG changes except
+  that feed it with CURR reply instead of OK for DEB messages. For that we need to track every config change
+  via mqtt/button/alarm clock. Since there are class wrappings for now to make it confortabley
+  I will feed app with a round-robbin mix of hearbeats and configs, hope it will make app happy
+  both for recent config and connection status.
+  Also sometimes app sends back config updates with the same settings just received from lamp,
+  this produces unnnecesary eeprom/mqtt updates and should be discarded
+*/
+
+bool rr = true;   // round-robbin flag for config/heartbeat replies
+
 void parseUDP() {
-  bool update = false;
-  int packetSize = Udp.parsePacket();
-  if (packetSize) {
+  bool update = true;
+  if (! Udp.parsePacket() ) return;
+
     int n = Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
     packetBuffer[n] = 0;
     inputBuffer = packetBuffer;
 
     if (inputBuffer.startsWith("DEB")) {
-      if (sendSettings_flag) sendCurrent();
-      else {
-        char buf[11];
+      update = false;
+      if (rr) {
         now = time(nullptr);
+        char buf[11];
         sprintf(buf, "OK %02u:%02u:%02u",localtime(&now)->tm_hour, localtime(&now)->tm_min, localtime(&now)->tm_sec);
         inputBuffer = String(buf);
-      }
-      sendSettings_flag = false;
+      } else sendCurrent();
+      rr = !rr;
     } else if (inputBuffer.startsWith("GET")) {
+      update = false;
       sendCurrent();
     } else if (inputBuffer.startsWith("EFF")) {
-      saveEEPROM();
+      if (currentMode == (byte)inputBuffer.substring(3).toInt()) return;
       currentMode = (byte)inputBuffer.substring(3).toInt();
       loadingFlag = true;
       FastLED.clear();
       delay(1);
-      sendCurrent();
       FastLED.setBrightness(modes[currentMode].brightness);
     } else if (inputBuffer.startsWith("BRI")) {
+      if (modes[currentMode].brightness == inputBuffer.substring(3).toInt()) return;
       modes[currentMode].brightness = inputBuffer.substring(3).toInt();
       FastLED.setBrightness(modes[currentMode].brightness);
-      update = true;
     } else if (inputBuffer.startsWith("SPD")) {
+      if (modes[currentMode].speed == inputBuffer.substring(3).toInt()) return;
       modes[currentMode].speed = inputBuffer.substring(3).toInt();
       loadingFlag = true;
-      settChanged = true;
-      eepromTimer = millis();
+      tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);
     } else if (inputBuffer.startsWith("SCA")) {
+      if (modes[currentMode].scale = inputBuffer.substring(3).toInt()) return;
       modes[currentMode].scale = inputBuffer.substring(3).toInt();
       loadingFlag = true;
-      update = true;
     } else if (inputBuffer.startsWith("P_ON")) {
       ONflag = true;
-      changePower();
-      sendCurrent();
+      tickerHelper.once_ms_scheduled(0, std::bind(changePower,ONflag));
     } else if (inputBuffer.startsWith("P_OFF")) {
       ONflag = false;
-      changePower();
-      sendCurrent();
+      tickerHelper.once_ms_scheduled(0, std::bind(changePower,ONflag));
     } else if (inputBuffer.startsWith("ALM_SET")) {
       byte alarmNum = (char)inputBuffer[7] - '0';
       alarmNum -= 1;
@@ -66,26 +79,24 @@ void parseUDP() {
       }
       saveAlarm(alarmNum);
       manualOff = false;
-      checkDawn();
+      update = false;
+      tickerAlarm.once_scheduled(0,  checkDawn);  // trigger Dawn checker
     } else if (inputBuffer.startsWith("ALM_GET")) {
       sendAlarms();
+      update = false;
     } else if (inputBuffer.startsWith("DAWN")) {
       dawnMode = inputBuffer.substring(4).toInt() - 1;
       saveDawnMmode();
+      update = false;
     }
-
-    char reply[inputBuffer.length() + 1];
-    inputBuffer.toCharArray(reply, inputBuffer.length() + 1);
-    Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
-    Udp.write(reply);
-    Udp.endPacket();
 
     if ( update ) {
       settChanged = true;
       eepromTimer = millis();
-      MQTTUpdateState();
+      sendCurrent();
+      tickerMQTT.attach_ms_scheduled(0, MQTTUpdateState);
     }
-  }
+    sendSettings();
 }
 
 void sendCurrent() {
@@ -103,13 +114,11 @@ void sendCurrent() {
 }
 
 void sendSettings() {
-  sendCurrent();
   char reply[inputBuffer.length() + 1];
   inputBuffer.toCharArray(reply, inputBuffer.length() + 1);
   Udp.beginPacket(Udp.remoteIP(), Udp.remotePort());
   Udp.write(reply);
   Udp.endPacket();
-  MQTTUpdateState();
 }
 
 void sendAlarms() {

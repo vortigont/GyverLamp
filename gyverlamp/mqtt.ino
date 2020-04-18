@@ -97,6 +97,7 @@ void MQTTUpdateState () {
    char sRGB[15];
    sprintf(sRGB, "%d,%d,%d", r, g, b);
    mqttclient.publish(String("homeassistant/light/"+clientId+"/rgb/status").c_str(), sRGB, true);
+   tickerMQTT.attach_scheduled(TIMER_MQTT, infoCallback);
 }
 
 void MQTTcallback(char* topic, byte* payload, unsigned int length) {
@@ -115,10 +116,8 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       _SPLN(Payload);
 
       ONflag = (Payload == "ON") ? true : false;
-      changePower();
-      sendCurrent();
+      changePower(ONflag);
       MQTTUpdateState();
-
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/brightness/set") {
@@ -139,15 +138,10 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
 
       if (Payload == "Демо") {
 
-          demo = true;
-          currentMode = random(0, MODE_AMOUNT-1);
-
-          if (!epilepsy) {
-          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);
-        }
-       } else {
-
-          demo = false;
+          demoCallback();
+          tickerDemo.attach_scheduled(TIMER_DEMO, demoCallback);
+      } else {
+          tickerDemo.detach();
           currentMode = Get_EFFIDX(Payload);
        }
 
@@ -188,7 +182,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       settChanged = true;
       eepromTimer = millis();
       MQTTUpdateState();
-
+      tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);
   }
 
   if (String(topic) == "homeassistant/light/"+clientId+"/effect/scale/set") {
@@ -235,7 +229,6 @@ void MQTTreconnect() {
 
             MQTTUpdateState();
             infoCallback();
-            tickerMQTT.attach_scheduled(TIMER_MQTT, infoCallback);
       } else {
 
           if (mqtt_reconnection_count == MQTT_RECONNECT_ATTEMPTS) {
@@ -372,26 +365,7 @@ void infoCallback() {
     mqttclient.publish(String("homeassistant/light/"+clientId+"/ResetReason").c_str(), String(ESP.getResetReason()).c_str(), true);
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"/VCC").c_str(), String((float)ESP.getVcc()/1000.0f).c_str(), true);
     mqttclient.publish(String("homeassistant/light/"+clientId+"/BootCount").c_str(), String(boot_count).c_str(), true);
-    mqttclient.publish(String("homeassistant/light/"+clientId+"/DemoMode").c_str(), String(demo).c_str(), true);
+    mqttclient.publish(String("homeassistant/light/"+clientId+"/DemoMode").c_str(), String(tickerDemo.active()).c_str(), true);
 
     if (boot_count > 1) { boot_count = 0; EEPROM.write(410, boot_count); EEPROM.commit(); }
-}
-
-void demoCallback() {
-
-    if (demo) {
-
-      currentMode = random(0, MODE_AMOUNT-1);
-      if (!epilepsy) {
-          while (currentMode == 4) currentMode = random(0, MODE_AMOUNT-1);
-        }
-
-      loadingFlag = true;
-      FastLED.clear();
-      delay(1);
-      sendCurrent();
-      FastLED.setBrightness(modes[currentMode].brightness);
-      MQTTUpdateState();
-   }
-
 }
