@@ -39,11 +39,11 @@ void parseUDP() {
       loadingFlag = true;
       FastLED.clear();
       delay(1);
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
     } else if (inputBuffer.startsWith("BRI")) {
       if (modes[currentMode].brightness == inputBuffer.substring(3).toInt()) return;
       modes[currentMode].brightness = inputBuffer.substring(3).toInt();
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
     } else if (inputBuffer.startsWith("SPD")) {
       if (modes[currentMode].speed == inputBuffer.substring(3).toInt()) return;
       modes[currentMode].speed = inputBuffer.substring(3).toInt();

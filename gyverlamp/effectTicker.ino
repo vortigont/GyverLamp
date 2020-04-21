@@ -1,5 +1,7 @@
 #include "effectsTicker.h"
 
+
+
 void effectsTick() {
   if (dawnFlag) return;
 
@@ -52,35 +54,21 @@ void effectsTick() {
   FastLED.show();
 }
 
+
 void changePower(bool power) {
 
   if (power) {
     // Включение
+    lamp.fadelight(modes[currentMode].brightness);
     tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);  // start effects scheduler
-    int steps = 1 + round(modes[currentMode].brightness / 80);
-    for (int i = 0; i <= modes[currentMode].brightness; i += steps) {
-      FastLED.setBrightness(i);
-      delay(2);
-      FastLED.show();
-    }
-    FastLED.setBrightness(modes[currentMode].brightness);
   } else {
     // Выключение
-    int steps = 1 + round(modes[currentMode].brightness / 40);
-    for (int i = modes[currentMode].brightness; i >= 0; i -= steps) {
-      FastLED.setBrightness(i);
-      delay(2);
-      FastLED.show();
-    }
-
-    tickerEffects.detach();   // stop effects scheduler
-    tickerAlarm.once_ms_scheduled(0,  checkDawn);  // start Dawn checker scheduler while lamp is off
-    tickerHelper.once_ms_scheduled(effectGetUpdRate(currentMode), [](){    FastLED.clear(); FastLED.show();});
+    lamp.fadelight(0);
+    tickerHelper.once_ms_scheduled(FADE_TIME, [](){ tickerEffects.detach();   FastLED.clear(true); tickerAlarm.once_ms_scheduled(0,  checkDawn); });
   }
 
   // записываем статус лампы в память
   EEPROM.write(420, power); EEPROM.commit();
-
 }
 
 
@@ -93,7 +81,7 @@ void demoCallback() {
 
       loadingFlag = true;
       FastLED.clear();
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
       MQTTUpdateState();
 }
 

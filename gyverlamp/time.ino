@@ -54,7 +54,7 @@ void checkDawn() {
                        map(dawnPosition, 1, 60*dawnOffsets[dawnMode], DAWN_MIN_BRIGHT, DAWN_MAX_BRIGHT));
       if (! tickerScroller.active()) {
         tickerScroller.attach_ms_scheduled(TIMER_SCROLLER, textScroller);
-        FastLED.setBrightness(255);
+        lamp.setBrightness(255, false, false);
       }
       tickerAlarm.once_scheduled(1,  checkDawn);    // tick every second while dawn
   } else {
@@ -71,8 +71,8 @@ void alarmreSchedlue(uint16_t timeout) {
   manualOff = false;
   if (tickerScroller.active()) {
     tickerScroller.detach();
-    FastLED.setBrightness(modes[currentMode].brightness);
-    FastLED.clear();
+    lamp.setBrightness(modes[currentMode].brightness, false);
+    FastLED.clear(true);
     FastLED.show();
   }
   tickerAlarm.once_scheduled(timeout,  checkDawn);  // arm Dawn checker

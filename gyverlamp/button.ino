@@ -15,7 +15,7 @@ void buttonTick() {
       manualOff = true;
       dawnFlag = false;
       loadingFlag = true;
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
     } else {
       ONflag = !ONflag;
       changePower(ONflag);
@@ -26,7 +26,7 @@ void buttonTick() {
   if (ONflag && touch.isDouble()) {
     _SPLN("BTN:double");
     if (++currentMode >= MODE_AMOUNT) currentMode = 0;
-    FastLED.setBrightness(modes[currentMode].brightness);
+    lamp.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
@@ -38,7 +38,7 @@ void buttonTick() {
 if (ONflag && touch.isTriple()) {
    _SPLN("BTN:triple");
     if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
-    FastLED.setBrightness(modes[currentMode].brightness);
+    lamp.setBrightness(modes[currentMode].brightness);
     loadingFlag = true;
     settChanged = true;
     eepromTimer = millis();
@@ -73,7 +73,7 @@ if (ONflag && touch.isTriple()) {
       else if (modes[currentMode].brightness > 1) modes[currentMode].brightness -= 1;
       else modes[currentMode].brightness = 1;
     }
-    FastLED.setBrightness(modes[currentMode].brightness);
+    lamp.setBrightness(modes[currentMode].brightness);
     settChanged = true;
     eepromTimer = millis();
     MQTTUpdateState();

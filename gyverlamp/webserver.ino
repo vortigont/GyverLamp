@@ -246,7 +246,7 @@ void routeSetConfig() {
     FastLED.clear();
     delay(1);
     sendCurrent();
-    FastLED.setBrightness(modes[currentMode].brightness);
+    lamp.setBrightness(modes[currentMode].brightness);
 
   }
 
@@ -264,7 +264,7 @@ void routeSetConfig() {
 
   if(http->hasArg("brightness")){
     modes[currentMode].brightness = http->arg("brightness").toInt();
-    FastLED.setBrightness(modes[currentMode].brightness);
+    lamp.setBrightness(modes[currentMode].brightness);
     if (!ONflag) {
       ONflag = true;
       changePower(ONflag);

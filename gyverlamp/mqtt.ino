@@ -125,7 +125,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       _SP("Command arrived: brightness "); _SPLN(Payload);
 
       modes[currentMode].brightness = Payload.toInt();
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
       settChanged = true;
       eepromTimer = millis();
       MQTTUpdateState();
@@ -150,7 +150,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       FastLED.clear();
       delay(1);
       sendCurrent();
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
       MQTTUpdateState();
 
   }
@@ -167,7 +167,7 @@ void MQTTcallback(char* topic, byte* payload, unsigned int length) {
       loadingFlag = true;
       delay(1);
       sendCurrent();
-      FastLED.setBrightness(modes[currentMode].brightness);
+      lamp.setBrightness(modes[currentMode].brightness);
       MQTTUpdateState();
 
   }

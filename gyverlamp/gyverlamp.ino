@@ -32,6 +32,7 @@
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 #include "fonts.h"
+#include "lightctrl.h"
 
 // ------------------- ТИПЫ --------------------
 
@@ -42,10 +43,12 @@ Ticker tickerScroller;    // scheduler for text scroller
 Ticker tickerMQTT;        // scheduler for MQTT tasks
 Ticker tickerDemo;        // scheduler for Demo task
 Ticker tickerEffects;     // scheduler for Effects task
-Ticker tickerHelper;     // scheduler helper
+Ticker tickerHelper;      // scheduler onetime helper
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 ESP8266WebServer *http; // запуск слушателя 80 порта (эйкей вебсервер)
 ESP8266HTTPUpdateServer *httpUpdater;
+LightCtrl lamp;          // LightController instance
+
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 
@@ -57,7 +60,7 @@ String inputBuffer;
 static const byte maxDim = max(WIDTH, HEIGHT);
 
 struct {
-  byte brightness = DEFAULT_BRIGHNESS;
+  byte brightness = DEFAULT_BRIGHTNESS;
   byte speed = DEFAULT_SPEED;
   byte scale = DEFAULT_SCALE;
 } modes[MODE_AMOUNT];
@@ -128,14 +131,14 @@ void setup() {
 
   // ЛЕНТА
   FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection( TypicalLEDStrip )*/;
-  FastLED.setBrightness(BRIGHTNESS);
   if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
-  FastLED.show();
+  lamp.setBrightness(0, false, false);
+  memset(matrixValue, 0, sizeof(matrixValue));
 
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
 
-  Serial.begin(BAUD);
+  _SPTO(Serial.begin(BAUD));
   _SPLN();
 
   EEPROM.begin(512);
@@ -252,8 +255,7 @@ void setup() {
       currentMode = 16;
       loadingFlag = true;
       FastLED.clear();
-      FastLED.setBrightness(modes[currentMode].brightness);
-
+      lamp.setBrightness(modes[currentMode].brightness, false);
     });
 
     ArduinoOTA.onEnd([]() {
@@ -314,9 +316,6 @@ void setup() {
 
   dawnMode = EEPROM.read(199);
   currentMode = (int8_t)EEPROM.read(200);
-  FastLED.setBrightness(modes[currentMode].brightness);
-
-  memset(matrixValue, 0, sizeof(matrixValue));
 
   randomSeed(micros());
 
@@ -339,6 +338,7 @@ void setup() {
 
   if (ONflag) {
       tickerEffects.attach_ms_scheduled(effectGetUpdRate(currentMode), effectsTick);
+      tickerHelper.once_ms_scheduled(0, std::bind(&LightCtrl::setBrightness, &lamp, modes[currentMode].brightness, true, true));
   }
 }
 
