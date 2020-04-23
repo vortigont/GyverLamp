@@ -5,7 +5,6 @@
 
 
 #define NUM_LEDS WIDTH * HEIGHT
-#define MQTT_MAX_PACKET_SIZE 1024
 
 #define DEFAULT_BRIGHTNESS 128
 #define DEFAULT_SPEED       30

@@ -209,15 +209,12 @@ void MQTTreconnect() {
       mqttclient.setServer(MQTTConfig.HOST, String(MQTTConfig.PORT).toInt());
       mqttclient.setCallback(MQTTcallback);
 
-      _SPTO(Serial.printf("Attempting MQTT connection to %s on port %s as %s...", MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER));
+      _SPTO(Serial.printf_P(dbg_conattempt_P, MQTTConfig.HOST, MQTTConfig.PORT, MQTTConfig.USER));
 
       // подключаемся к MQTT серверу
       if (mqttclient.connect(clientId.c_str(), MQTTConfig.USER, MQTTConfig.PASSWD, String("homeassistant/light/"+clientId+"/state").c_str(), 0,  true, "online")) {
             _SPLN("connected!");
             mqtt_reconnection_count = 0;
-
-            // ehhh, this madness should be refactored
-            //HomeAssistantSendDiscoverConfig();
 
             // подписываемся на топики
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/switch").c_str());
@@ -227,17 +224,11 @@ void MQTTreconnect() {
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/speed/set").c_str());
             mqttclient.subscribe(String("homeassistant/light/"+clientId+"/effect/scale/set").c_str());
 
-            MQTTUpdateState();
-            infoCallback();
+            tickerMQTT.once_ms_scheduled(0, HomeAssistantSendDiscoverConfig);
       } else {
 
           if (mqtt_reconnection_count == MQTT_RECONNECT_ATTEMPTS) {
             mqtt_reconnection_count = 0;
-            //_SPLN("Сan not establish a connection, resetting ESP...");
-            //ESP.restart();         // not sure that ESP restart because of dead MQTT is a good idea
-
-            //mqtt_timeout = 5000;
-            //mqtt_reconnection_count = 0;
           }
 
           ++mqtt_reconnection_count;
@@ -251,112 +242,105 @@ void MQTTreconnect() {
 
 void HomeAssistantSendDiscoverConfig() {
 
-  DynamicJsonDocument hass_discover(1024);
+  char espid[ESP_ID_LEN];
+  sprintf(espid, "%x", ESP.getChipId());
 
-  hass_discover["~"] = "homeassistant/light/"+clientId;
-  hass_discover["name"] = "Gyver Lamp "+ clientId; // name
-  hass_discover["uniq_id"] = String(ESP.getChipId(), HEX); // unique_id
-  hass_discover["avty_t"] = "~/state";         // availability_topic
-  hass_discover["pl_avail"] = "online";        // payload_available
-  hass_discover["pl_not_avail"] = "offline";   // payload_not_available
+  char topic[MQTT_TOPIC_BUFF_LEN];
 
-  hass_discover["bri_cmd_t"] = "~/brightness/set";     // brightness_command_topic
-  hass_discover["bri_stat_t"] = "~/brightness/status"; // brightness_state_topic
-  hass_discover["bri_scl"] = 255;
+  uint16_t msglength = 0;
 
-  hass_discover["cmd_t"] = "~/switch"; // command_topic
-  hass_discover["stat_t"] = "~/status"; // state_topic
+  for (uint8_t i = 0; i < HA_DISCOVER_PGMCHUNKS; i++) {
+    msglength += strlen_P((PGM_P)HA_discover_dev[i]);
+  }
+  
+  msglength += strlen(espid) * HA_DISCOVER_IDCHUNKS;
+  _SPTO(Serial.printf_P(dbg_publishlong_P, msglength));
 
-  hass_discover["fx_cmd_t"] = "~/effect/set";     // effect_command_topic
-  hass_discover["fx_stat_t"] = "~/effect/status"; // effect_state_topic
+  snprintf_P(topic, sizeof(topic), topic_light_id_config_P, clientId.c_str());
 
-  hass_discover["rgb_cmd_t"] = "~/rgb/set";     // rgb_command_topic
-  hass_discover["rgb_stat_t"] = "~/rgb/status"; // rgb_state_topic
+  if (mqttclient.beginPublish(topic, msglength, true) ) {
+    mqttclient.print(FPSTR(HA_discover00));  _SP(FPSTR(HA_discover00));
+    mqttclient.print(espid);                 _SP(espid);
+    mqttclient.print(FPSTR(HA_discover01));  _SP(FPSTR(HA_discover01));
+    mqttclient.print(espid);                 _SP(espid);
+    mqttclient.print(FPSTR(HA_discover02));  _SP(FPSTR(HA_discover02));
+    mqttclient.print(espid);                 _SP(espid);
+    mqttclient.print(FPSTR(HA_discover03));  _SP(FPSTR(HA_discover03));
+    mqttclient.print(FPSTR(HA_discover04));  _SP(FPSTR(HA_discover04));
+    mqttclient.print(FPSTR(HA_discover05));  _SP(FPSTR(HA_discover05));
+    mqttclient.print(espid);                 _SP(espid);
+    mqttclient.print(FPSTR(HA_discover06));  _SP(FPSTR(HA_discover06));
 
-  String hass_discover_str;
-  serializeJson(hass_discover, hass_discover_str);
-
-  const char eff_list[] = R"=====(, "fx_list": ["Конфетти", "Огонь", "Радуга верт.", "Радуга гориз.", "Смена цвета", "Безумие 3D", "Облака 3D", "Лава 3D", "Плазма 3D", "Радуга 3D", "Павлин 3D", "Зебра 3D", "Лес 3D", "Океан 3D", "Цвет", "Снегопад", "Матрица", "Светлячки",  "Аквариум", "Звездопад", "Пейнтбол", "Спираль", "Демо"] })=====";  // effect_list
-  const char dev_reg_tpl[] = R"=====(, "device": {"ids": ["%s"], "name": "Gyver Lamp", "mf": "Alex Gyver", "mdl": "Gyver Lamp v2", "sw": "1.5.5 MQTT"})=====";  // device reg
-  char dev_reg[256];
-
-  sprintf(dev_reg, dev_reg_tpl, String(ESP.getChipId(), HEX).c_str());
-  hass_discover_str = hass_discover_str.substring(0, hass_discover_str.length() - 1);
-
-  hass_discover_str += dev_reg;
-  hass_discover_str += eff_list;
-
-  #ifdef DEBUG
-  //_SPLN(hass_discover_str);
-  //mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), "");
-  #endif
-
-  if (mqttclient.publish(String("homeassistant/light/"+clientId+"/config").c_str(), hass_discover_str.c_str(), true)) {
-    _SPLN("Success sent discover message");
+    if ( not mqttclient.endPublish() ) _SPLN(FPSTR(dbg_publish_P));
   } else {
-    _SPLN("Error sending discover message");
+    _SPLN(FPSTR(dbg_publishcomplete_P));
   }
 
+
   // уровень wifi сигнала
-  DynamicJsonDocument hass_discover_signal_sensor(1024);
-  String hass_discover_signal_sensor_str;
+  msglength = 0;
+  for (uint8_t i = 0; i < HA_DISCOVER_S_PGMCHUNKS; i++) {
+    msglength += strlen_P((PGM_P)HA_discover_sig[i]);
+  }
+  
+  msglength += strlen(espid) * HA_DISCOVER_S_IDCHUNKS;
+  _SPTO(Serial.printf_P(dbg_publishlong_P, msglength));
 
-  hass_discover_signal_sensor["~"] = "homeassistant/sensor/"+clientId+"W";
-  hass_discover_signal_sensor["device_class"] = "signal_strength";
-  hass_discover_signal_sensor["name"] = "Signal Strength "+clientId;
-  hass_discover_signal_sensor["state_topic"] = "~/WiFi/RSSI_pct";
-  hass_discover_signal_sensor["unit_of_measurement"] = "%";
-  hass_discover_signal_sensor["uniq_id"] = "W"+String(ESP.getChipId(), HEX); // unique_id
-  hass_discover_signal_sensor["avty_t"] = String("homeassistant/light/"+clientId+"/state");  // availability_topic
-  hass_discover_signal_sensor["pl_avail"] = "online";        // payload_available
-  hass_discover_signal_sensor["pl_not_avail"] = "offline";   // payload_not_available
+  snprintf_P(topic, sizeof(topic), topic_sensor_id_Wconfig_P, clientId.c_str());
 
-  serializeJson(hass_discover_signal_sensor, hass_discover_signal_sensor_str);
+  if (mqttclient.beginPublish(topic, msglength, true) ) {
+    mqttclient.print(FPSTR(HA_discover_s00));   _SP(FPSTR(HA_discover_s00));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s01));   _SP(FPSTR(HA_discover_s01));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s02));   _SP(FPSTR(HA_discover_s02));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s03));   _SP(FPSTR(HA_discover_s03));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s04));   _SP(FPSTR(HA_discover_s04));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s05));   _SP(FPSTR(HA_discover_s05));
 
-  const char dev_reg_tpl_s[] = R"=====(, "device": {"ids": ["%s"]} })=====";  // device reg
-  char dev_reg_s[256];
-
-  sprintf(dev_reg_s, dev_reg_tpl_s, String(ESP.getChipId(), HEX).c_str());
-  hass_discover_signal_sensor_str = hass_discover_signal_sensor_str.substring(0, hass_discover_signal_sensor_str.length() - 1);
-
-  hass_discover_signal_sensor_str += dev_reg_s;
-
-  if (mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/config").c_str(), hass_discover_signal_sensor_str.c_str(), true) ) {
-    _SPLN("Success sent discover message");
-  }  else {
-    _SPLN("Error sending discover message");
+    if ( not mqttclient.endPublish() ) _SPLN(FPSTR(dbg_publish_P));
+  } else {
+    _SPLN(FPSTR(dbg_publishcomplete_P));
   }
 
   // Время непрерывной работы
-  DynamicJsonDocument hass_discover_uptime_sensor(1024);
-  String hass_discover_uptime_sensor_str;
+  msglength = 0;
+  for (uint8_t i = 0; i < HA_DISCOVER_U_PGMCHUNKS; i++) {
+    msglength += strlen_P((PGM_P)HA_discover_upt[i]);
+  }
+  
+  msglength += strlen(espid) * HA_DISCOVER_U_IDCHUNKS;
+  _SPTO(Serial.printf_P(dbg_publishlong_P, msglength));
 
-  hass_discover_uptime_sensor["~"] = "homeassistant/sensor/"+clientId+"U";
-  hass_discover_uptime_sensor["ic"] = "mdi:timer";
-  hass_discover_uptime_sensor["name"] = "Uptime "+clientId;
-  hass_discover_uptime_sensor["state_topic"] = "~/uptime";
-  hass_discover_uptime_sensor["unit_of_measurement"] = "s";
-  hass_discover_uptime_sensor["uniq_id"] = "U"+String(ESP.getChipId(), HEX); // unique_id
-  hass_discover_uptime_sensor["avty_t"] = String("homeassistant/light/"+clientId+"/state");   // availability_topic
-  hass_discover_uptime_sensor["pl_avail"] = "online";        // payload_available
-  hass_discover_uptime_sensor["pl_not_avail"] = "offline";   // payload_not_available
+  snprintf_P(topic, sizeof(topic), topic_sensor_id_Uconfig_P, clientId.c_str());
 
-  serializeJson(hass_discover_uptime_sensor, hass_discover_uptime_sensor_str);
+  if (mqttclient.beginPublish(topic, msglength, true) ) {
+    mqttclient.print(FPSTR(HA_discover_s00));   _SP(FPSTR(HA_discover_s00));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_u01));   _SP(FPSTR(HA_discover_u01));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_u02));   _SP(FPSTR(HA_discover_u02));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s03));   _SP(FPSTR(HA_discover_s03));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s04));   _SP(FPSTR(HA_discover_s04));
+    mqttclient.print(espid);                    _SP(espid);
+    mqttclient.print(FPSTR(HA_discover_s05));   _SP(FPSTR(HA_discover_s05));
 
-  hass_discover_uptime_sensor_str = hass_discover_uptime_sensor_str.substring(0, hass_discover_uptime_sensor_str.length() - 1);
-  hass_discover_uptime_sensor_str += dev_reg_s;
-
-  if (mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/config").c_str(), hass_discover_uptime_sensor_str.c_str(), true)) {
-    _SPLN("Success sent discover message");
+    if ( not mqttclient.endPublish() ) _SPLN(FPSTR(dbg_publish_P));
   } else {
-    _SPLN("Error sending discover message");
+    _SPLN(FPSTR(dbg_publishcomplete_P));
   }
 
+  tickerMQTT.once_ms_scheduled(0, MQTTUpdateState);
 }
 
 void infoCallback() {
     if (! USE_MQTT) return;
-    if (! mqttclient.connected()) { tickerMQTT.once_scheduled(0,MQTTreconnect); return;}
+    if (! mqttclient.connected()) { _SPLN("No MQTT connection"); tickerMQTT.once_scheduled(0,MQTTreconnect); return;}
 
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"U/uptime").c_str(), String(millis()/1000).c_str(), true);
     mqttclient.publish(String("homeassistant/sensor/"+clientId+"W/WiFi/RSSI").c_str(), String(WiFi.RSSI()).c_str(), true);

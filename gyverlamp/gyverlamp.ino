@@ -29,7 +29,6 @@
 #include <EEPROM.h>
 #include <GyverButton.h>
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
 #include <ArduinoOTA.h>
 #include "fonts.h"
 #include "lightctrl.h"
