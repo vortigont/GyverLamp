@@ -25,3 +25,6 @@
 #include <TZ.h>
 #include <sntp.h>
 
+// Рассвет
+#define DAWN_MIN_BRIGHT 1       // мин.  яркость рассвета
+#define DAWN_MAX_BRIGHT 255     // макс. яркость рассвета
